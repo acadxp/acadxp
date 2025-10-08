@@ -1,19 +1,16 @@
-@import './variables.css';
-@import './utilities.css';
-@import './components.css';
+@import "./variables.css";
 
 @import "tailwindcss";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
-
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground relative;
   }
 }
 
@@ -72,4 +69,51 @@
 
 .animate-spin {
   animation: spin 1s linear infinite;
+}
+
+@layer utilities {
+  /* Purple gradient utilities based on your image */
+
+  .bg-gradient-purple {
+    @apply bg-gradient-to-br from-purple-900 via-purple-600 to-purple-900;
+  }
+
+  .bg-gradient-purple-dark {
+    background: linear-gradient(135deg, #6d28d9 0%, #4c1d95 50%, #1e1b4b 100%);
+  }
+
+  .bg-gradient-purple-light {
+    background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 50%, #5b21b6 100%);
+  }
+
+  /* Radial gradient version */
+  .bg-gradient-purple-radial {
+    background: radial-gradient(
+      circle at center,
+      #8b5cf6 0%,
+      #5b21b6 50%,
+      #312e81 100%
+    );
+  }
+
+  /* Vertical gradient */
+  .bg-gradient-purple-vertical {
+    background: linear-gradient(180deg, #8b5cf6 0%, #5b21b6 50%, #312e81 100%);
+  }
+
+  /* Horizontal gradient */
+  .bg-gradient-purple-horizontal {
+    background: linear-gradient(90deg, #8b5cf6 0%, #5b21b6 50%, #312e81 100%);
+  }
+
+  /* Glass effect with purple gradient */
+  .bg-gradient-purple-glass {
+    background: linear-gradient(
+      135deg,
+      rgba(139, 92, 246, 0.8) 0%,
+      rgba(91, 33, 182, 0.8) 50%,
+      rgba(49, 46, 129, 0.8) 100%
+    );
+    backdrop-filter: blur(10px);
+  }
 }
