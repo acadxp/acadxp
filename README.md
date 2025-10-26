@@ -1,4 +1,4 @@
-# Academic XP Tracker Frontend 🎓⚡
+# 🎮 AcadXP — Turn Your Degree into a Game
 
 Transform your academic journey into an engaging, gamified experience! Track your progress, visualize your skills, and level up through your degree with this comprehensive academic progress tracker.
 
