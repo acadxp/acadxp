@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { submitEmail } from "@/api/api";
+import { AxiosError } from "axios";
 
 export default function HomePage() {
   const [waitlistEmail, setWaitlistEmail] = useState("");
@@ -14,16 +15,15 @@ export default function HomePage() {
       const response = await submitEmail(email);
       return response;
     },
-    onSuccess: (data: any) => {
+    onSuccess: (data) => {
       setSuccessMessage(data?.message || "Successfully joined the waitlist!");
       setErrorMessage("");
       setWaitlistEmail("");
     },
-    onError: (error: any) => {
-      setErrorMessage(
-        error?.response?.data?.message ||
-          "Failed to join the waitlist. Please try again."
-      );
+
+    // TODO : improve error handling with types
+    onError: () => {
+      setErrorMessage("Failed to join the waitlist. Please try again.");
       setSuccessMessage("");
     },
   });
