@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { submitEmail } from "@/api/api";
+import { submitEmail } from "@/lib/api";
 import { AxiosError } from "axios";
 
 export default function HomePage() {
