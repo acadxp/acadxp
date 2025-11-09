@@ -1,5 +1,5 @@
 @import "./variables.css";
-@import "@acadxp/xpui/dist/xpui.css";
+@import "@acadxp/xpui/styles";
 
 @import "tailwindcss";
 @import "tw-animate-css";
