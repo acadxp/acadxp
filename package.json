@@ -1,7 +1,11 @@
 {
   "name": "academic-xp-tracker_frontend",
   "version": "0.1.0",
-  "private": true,
+  "description": "Transform Your Academic Journey into an Epic Adventure with AcadXP",
+  "author": {
+    "url": "https://github.com/DripCode-Studio",
+    "name": "DripCode Studio"
+  },
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
