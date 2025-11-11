@@ -1,4 +1,6 @@
+@import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
 @import "./variables.css";
+@import "@acadxp/xpui/styles";
 
 @import "tailwindcss";
 @import "tw-animate-css";
@@ -8,6 +10,7 @@
     @apply border-border outline-ring/50;
   }
 }
+
 @layer utilities {
   /* Purple gradient utilities based on your image */
 
@@ -53,35 +56,87 @@
     );
     backdrop-filter: blur(10px);
   }
-}
 
-/* Animation utility classes */
-.animate-fade-in {
-  animation: fadeIn 0.3s ease-out;
-}
+  .pixel-text {
+    image-rendering: pixelated;
+    font-family: "Press Start 2P", system-ui, monospace;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  }
 
-.animate-slide-up {
-  animation: slideUp 0.4s ease-out;
-}
+  .pixel-render {
+    image-rendering: pixelated;
+  }
 
-.animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
+  .pixel-border {
+    box-shadow: 0 0 0 2px currentColor, 0 0 0 4px rgba(0, 0, 0, 0.5),
+      0 0 20px rgba(168, 85, 247, 0.5);
+  }
 
-.animate-spin {
-  animation: spin 1s linear infinite;
-}
+  .bg-grid-pattern {
+    background-image: linear-gradient(
+        rgba(168, 85, 247, 0.1) 1px,
+        transparent 1px
+      ),
+      linear-gradient(90deg, rgba(168, 85, 247, 0.1) 1px, transparent 1px);
+    background-size: 50px 50px;
+  }
 
-.animate-gradient-move {
-  animation: gradient-move 10s ease-in-out infinite alternate;
-}
+  /* Animation utility classes */
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
 
-.animate-gradient-move-reverse {
-  animation: gradient-move-reverse 12s ease-in-out infinite alternate;
-}
+  .animate-slide-up {
+    animation: slideUp 0.4s ease-out;
+  }
 
-.animate-pulse-slow {
-  animation: pulse-slow 8s ease-in-out infinite;
+  .animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .animate-spin {
+    animation: spin 1s linear infinite;
+  }
+
+  .animate-gradient-move {
+    animation: gradient-move 10s ease-in-out infinite alternate;
+  }
+
+  .animate-gradient-move-reverse {
+    animation: gradient-move-reverse 12s ease-in-out infinite alternate;
+  }
+
+  .animate-pulse-slow {
+    animation: pulse-slow 8s ease-in-out infinite;
+  }
+
+  .animate-blink {
+    animation: blink 1.5s ease-in-out infinite;
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .animate-float-delayed {
+    animation: float 3s ease-in-out 1.5s infinite;
+  }
+
+  .animate-float-slow {
+    animation: float 5s ease-in-out infinite;
+  }
+
+  .animate-particle {
+    animation: particle-float 4s ease-in-out infinite;
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+  }
 }
 
 /* Animation keyframes */
@@ -152,5 +207,62 @@
   50% {
     opacity: 0.9;
     transform: scale(1.05);
+  }
+}
+
+@keyframes blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0.3;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-20px) rotate(180deg);
+  }
+}
+
+@keyframes particle-float {
+  0% {
+    transform: translateY(0px) scale(0);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    transform: translateY(-100vh) scale(0);
+    opacity: 0;
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(168, 85, 247, 0.8),
+      0 0 60px rgba(168, 85, 247, 0.4);
+  }
+}
+
+@keyframes glow {
+  0% {
+    text-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
+  }
+  100% {
+    text-shadow: 0 0 20px rgba(168, 85, 247, 1),
+      0 0 30px rgba(236, 72, 153, 0.5);
   }
 }
