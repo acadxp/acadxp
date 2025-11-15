@@ -234,7 +234,7 @@ export default function SignupPage() {
                 <Button
                   type="button"
                   variant="outline"
-                  className="flex-1 border-purple-500/50 text-purple-200"
+                  className="flex-1 py-6 border-purple-500/50 text-purple-200"
                   onClick={handleBack}
                   disabled={isLoading}
                 >
