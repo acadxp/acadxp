@@ -332,6 +332,38 @@ export default function SignupPage() {
                 )}
               </div>
             )}
+            {step === 4 && (
+              <div className="space-y-4">
+                <div className="rounded-lg border border-purple-500/30 bg-gray-800/40 p-4">
+                  <h3 className="text-sm font-semibold text-purple-200 mb-3">
+                    Review your details
+                  </h3>
+                  <dl className="space-y-2">
+                    <div className="flex items-center justify-between gap-4">
+                      <dt className="text-sm text-purple-300/80">Name</dt>
+                      <dd className="text-sm text-white">{getValues("name")}</dd>
+                    </div>
+                    <div className="flex items-center justify-between gap-4">
+                      <dt className="text-sm text-purple-300/80">Email</dt>
+                      <dd className="text-sm text-white">{getValues("email")}</dd>
+                    </div>
+                    <div className="flex items-center justify-between gap-4">
+                      <dt className="text-sm text-purple-300/80">Username</dt>
+                      <dd className="text-sm text-white">@{getValues("username")}</dd>
+                    </div>
+                    <div className="flex items-center justify-between gap-4">
+                      <dt className="text-sm text-purple-300/80">Profile</dt>
+                      <dd className="text-xs text-white/90">
+                        https://acadxp.vercel.app/@{getValues("username")}
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+                <p className="text-xs text-purple-300/80">
+                  Password is kept secure and not shown here.
+                </p>
+              </div>
+            )}
 
             {apiError && (
               <p className="text-sm text-pink-300">{apiError.message}</p>
