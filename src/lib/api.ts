@@ -36,3 +36,21 @@ export const loginUser = async ({ email, password }: LoginUserPayload) => {
   });
   return response.data;
 };
+
+export const checkEmailAvailability = async (email: string) => {
+  const response = await api.get(`/v1/auth/check-email?email=${email}`);
+
+  const isAvailable =
+    response.data.message === "Email is available" ? true : false;
+  return isAvailable;
+};
+
+export const checkUsernameAvailability = async (username: string) => {
+  const response = await api.get(
+    `/v1/auth/check-username?username=${username}`
+  );
+
+  const isAvailable =
+    response.data.message === "Username is available" ? true : false;
+  return isAvailable;
+};

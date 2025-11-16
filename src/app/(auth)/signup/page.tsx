@@ -10,7 +10,11 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { registerUser } from "@/lib/api";
+import {
+  registerUser,
+  checkEmailAvailability,
+  checkUsernameAvailability,
+} from "@/lib/api";
 import type { RegisterUserPayload } from "../../../types/user";
 
 const schema = z
@@ -39,6 +43,8 @@ export default function SignupPage() {
     formState: { errors },
     trigger,
     getValues,
+    setError,
+    clearErrors,
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     mode: "onTouched",
@@ -50,6 +56,9 @@ export default function SignupPage() {
       username: "",
     },
   });
+  // Loading flags for async field checks
+  const [checkingEmail, setCheckingEmail] = useState(false);
+  const [checkingUsername, setCheckingUsername] = useState(false);
 
   const signupMutation = useMutation({
     mutationFn: async (payload: RegisterUserPayload) => {
@@ -83,14 +92,69 @@ export default function SignupPage() {
   const handleNext = async (e: React.FormEvent) => {
     e.preventDefault();
     const field = fields[step];
+
+    // Run client-side validation for current field
     const valid = await trigger(field);
-    if (valid) {
-      setStep((prev) => prev + 1);
+    if (!valid) return;
+
+    if (apiError) setApiError(null);
+
+    // Email uniqueness check on step 1
+    if (step === 1) {
+      const email = getValues("email").trim();
+      if (!email) return; // safety guard
+      setCheckingEmail(true);
+      try {
+        const available = await checkEmailAvailability(email);
+        if (!available) {
+          setError("email", {
+            type: "manual",
+            message: "Email is already in use.",
+          });
+          return;
+        } else {
+          clearErrors("email");
+        }
+      } catch (err: any) {
+        setError("email", {
+          type: "manual",
+          message: err?.message || "Could not verify email.",
+        });
+        return;
+      } finally {
+        setCheckingEmail(false);
+      }
     }
 
-    if (apiError) {
-      setApiError(null);
+    // Username uniqueness check on step 3
+    if (step === 3) {
+      const username = getValues("username").trim();
+      if (!username) return; // safety guard
+      setCheckingUsername(true);
+      try {
+        const available = await checkUsernameAvailability(username);
+        if (!available) {
+          setError("username", {
+            type: "manual",
+            message: "Username is taken.",
+          });
+          return;
+        } else {
+          clearErrors("username");
+        }
+      } catch (err: any) {
+        setError("username", {
+          type: "manual",
+          message: err?.message || "Could not verify username.",
+        });
+        return;
+      } finally {
+        setCheckingUsername(false);
+      }
     }
+
+    // Advance only after passing all checks
+    setStep((prev) => prev + 1);
   };
 
   const handleBack = (e: React.MouseEvent) => {
@@ -280,7 +344,7 @@ export default function SignupPage() {
                   variant="outline"
                   className="flex-1 py-6 border-purple-500/50 text-purple-200"
                   onClick={handleBack}
-                  disabled={isLoading}
+                  disabled={isLoading || checkingEmail || checkingUsername}
                 >
                   Back
                 </Button>
@@ -290,9 +354,9 @@ export default function SignupPage() {
                 <Button
                   type="submit"
                   className="flex-1 py-6 text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500"
-                  disabled={isLoading}
+                  disabled={isLoading || checkingEmail || checkingUsername}
                 >
-                  Next
+                  {checkingEmail || checkingUsername ? "Checking..." : "Next"}
                 </Button>
               ) : (
                 <Button
