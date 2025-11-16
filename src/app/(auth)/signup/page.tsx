@@ -2,20 +2,189 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import {
+  registerUser,
+  checkEmailAvailability,
+  checkUsernameAvailability,
+} from "@/lib/api";
+import type { RegisterUserPayload } from "../../../types/user";
+
+const schema = z
+  .object({
+    name: z.string().min(2, "Name must be at least 2 characters"),
+    email: z.email("Invalid email address"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
+    confirmPassword: z.string(),
+    username: z.string().min(3, "Username must be at least 3 characters"),
+  })
+  .refine((vals) => vals.password === vals.confirmPassword, {
+    message: "Passwords must match.",
+    path: ["confirmPassword"],
+  });
+
+type FormValues = z.infer<typeof schema>;
 
 export default function SignupPage() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const router = useRouter();
+  const [step, setStep] = useState(0);
+  const [apiError, setApiError] = useState<null | { message: string }>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    trigger,
+    getValues,
+    setError,
+    clearErrors,
+  } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    mode: "onTouched",
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      username: "",
+    },
+  });
+  // Loading flags for async field checks
+  const [checkingEmail, setCheckingEmail] = useState(false);
+  const [checkingUsername, setCheckingUsername] = useState(false);
+
+  const signupMutation = useMutation({
+    mutationFn: async (payload: RegisterUserPayload) => {
+      const response = await registerUser(payload);
+      return response;
+    },
+    onSuccess: (data) => {
+      router.push("/dashboard");
+      console.log("Signup successful:", data);
+    },
+    onError: (error: unknown) => {
+      let message = "Signup failed.";
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "response" in error &&
+        (error as { response?: { data?: { message?: string } } }).response?.data
+          ?.message
+      ) {
+        message =
+          (error as { response?: { data?: { message?: string } } }).response!
+            .data!.message || message;
+      }
+      alert(`${message} Please try again.`);
+      setApiError({ message });
+    },
+  });
+
+  const isLoading = signupMutation.isPending;
+
+  const fields: (keyof FormValues)[] = [
+    "name",
+    "email",
+    "password",
+    "confirmPassword",
+    "username",
+  ];
+
+  const handleNext = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement signup logic
-    console.log("Signup:", { name, email, password, confirmPassword });
+    const field = fields[step];
+
+    // Run client-side validation for current field
+    const valid = await trigger(field);
+    if (!valid) return;
+
+    if (apiError) setApiError(null);
+
+    // Email uniqueness check on step 1
+    if (step === 1) {
+      const email = getValues("email").trim();
+      if (!email) return; // safety guard
+      setCheckingEmail(true);
+      try {
+        const available = await checkEmailAvailability(email);
+        if (!available) {
+          setError("email", {
+            type: "manual",
+            message: "Email is already in use.",
+          });
+          return;
+        } else {
+          clearErrors("email");
+        }
+      } catch (err: unknown) {
+        const msg =
+          err instanceof Error ? err.message : "Could not verify email.";
+        setError("email", {
+          type: "manual",
+          message: msg,
+        });
+        return;
+      } finally {
+        setCheckingEmail(false);
+      }
+    }
+
+    // Username uniqueness check on step 3
+    if (step === 3) {
+      const username = getValues("username").trim();
+      if (!username) return; // safety guard
+      setCheckingUsername(true);
+      try {
+        const available = await checkUsernameAvailability(username);
+        if (!available) {
+          setError("username", {
+            type: "manual",
+            message: "Username is taken.",
+          });
+          return;
+        } else {
+          clearErrors("username");
+        }
+      } catch (err: unknown) {
+        const msg =
+          err instanceof Error ? err.message : "Could not verify username.";
+        setError("username", {
+          type: "manual",
+          message: msg,
+        });
+        return;
+      } finally {
+        setCheckingUsername(false);
+      }
+    }
+
+    // Advance only after passing all checks
+    setStep((prev) => prev + 1);
+  };
+
+  const handleBack = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setStep((s) => Math.max(0, s - 1));
+
+    if (apiError) {
+      setApiError(null);
+    }
+  };
+
+  const onSubmit = (vals: FormValues) => {
+    signupMutation.mutate({
+      name: vals.name.trim(),
+      email: vals.email.trim(),
+      password: vals.password,
+      username: vals.username.trim(),
+    });
   };
 
   return (
@@ -32,89 +201,223 @@ export default function SignupPage() {
             />
           </div>
           <CardTitle className="text-3xl font-bold text-center bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-            Create Account
+            {step === 0 && "What's your name, Adventurer?"}
+            {step === 1 && "Where should we send your XP updates?"}
+            {step === 2 && "Create a secure password for your quest chest"}
+            {step === 3 && "Choose a public handle — your academy tag"}
+            {step === 4 && "Ready to start your journey?"}
           </CardTitle>
+          <p className="text-center text-sm text-purple-200/80">
+            {step === 0 && "Let's start your learning journey"}
+            {step === 1 && "We'll send updates, never spam"}
+            {step === 2 && "Keep your progress safe and secure"}
+            {step === 3 && "This will be your unique identifier"}
+            {step === 4 && "Create your account and unlock Level 1!"}
+          </p>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <label
-                htmlFor="name"
-                className="text-sm font-medium text-purple-200"
-              >
-                Full Name
-              </label>
-              <input
-                id="name"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg bg-gray-800/50 border border-purple-500/30 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                placeholder="John Doe"
-                required
-              />
-            </div>
+          <form
+            onSubmit={step < 4 ? handleNext : handleSubmit(onSubmit)}
+            className="space-y-4"
+          >
+            <p className="text-xs text-purple-300 text-center">
+              Step {step + 1} of 5
+            </p>
 
-            <div className="space-y-2">
-              <label
-                htmlFor="email"
-                className="text-sm font-medium text-purple-200"
-              >
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg bg-gray-800/50 border border-purple-500/30 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                placeholder="your@email.com"
-                required
-              />
-            </div>
+            {step === 0 && (
+              <div className="space-y-2">
+                <label
+                  htmlFor="name"
+                  className="text-sm font-medium text-purple-200"
+                >
+                  Full Name
+                </label>
+                <input
+                  id="name"
+                  type="text"
+                  {...register("name")}
+                  className="w-full px-4 py-3 rounded-lg bg-gray-800/50 border border-purple-500/30 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  placeholder="John Doe"
+                  autoComplete="name"
+                />
+                {errors.name && (
+                  <p className="text-sm text-pink-300">{errors.name.message}</p>
+                )}
+              </div>
+            )}
 
-            <div className="space-y-2">
-              <label
-                htmlFor="password"
-                className="text-sm font-medium text-purple-200"
-              >
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg bg-gray-800/50 border border-purple-500/30 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                placeholder="••••••••"
-                required
-              />
-            </div>
+            {step === 1 && (
+              <div className="space-y-2">
+                <label
+                  htmlFor="email"
+                  className="text-sm font-medium text-purple-200"
+                >
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  {...register("email")}
+                  className="w-full px-4 py-3 rounded-lg bg-gray-800/50 border border-purple-500/30 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  placeholder="your@email.com"
+                  autoComplete="email"
+                />
+                {errors.email && (
+                  <p className="text-sm text-pink-300">
+                    {errors.email.message}
+                  </p>
+                )}
+              </div>
+            )}
 
-            <div className="space-y-2">
-              <label
-                htmlFor="confirmPassword"
-                className="text-sm font-medium text-purple-200"
-              >
-                Confirm Password
-              </label>
-              <input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg bg-gray-800/50 border border-purple-500/30 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                placeholder="••••••••"
-                required
-              />
-            </div>
+            {step === 2 && (
+              <>
+                <div className="space-y-2">
+                  <label
+                    htmlFor="password"
+                    className="text-sm font-medium text-purple-200"
+                  >
+                    Password
+                  </label>
+                  <input
+                    id="password"
+                    type="password"
+                    {...register("password")}
+                    className="w-full px-4 py-3 rounded-lg bg-gray-800/50 border border-purple-500/30 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    placeholder="••••••••"
+                    autoComplete="new-password"
+                  />
+                  <p className="text-xs text-purple-300">Min 8 characters.</p>
+                  {errors.password && (
+                    <p className="text-sm text-pink-300">
+                      {errors.password.message}
+                    </p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <label
+                    htmlFor="confirmPassword"
+                    className="text-sm font-medium text-purple-200"
+                  >
+                    Confirm Password
+                  </label>
+                  <input
+                    id="confirmPassword"
+                    type="password"
+                    {...register("confirmPassword")}
+                    className="w-full px-4 py-3 rounded-lg bg-gray-800/50 border border-purple-500/30 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    placeholder="••••••••"
+                    autoComplete="new-password"
+                  />
+                  {errors.confirmPassword && (
+                    <p className="text-sm text-pink-300">
+                      {errors.confirmPassword.message}
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
 
-            <Button
-              type="submit"
-              className="w-full py-6 text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500"
-            >
-              Sign Up
-            </Button>
+            {step === 3 && (
+              <div className="space-y-2">
+                <label
+                  htmlFor="username"
+                  className="text-sm font-medium text-purple-200"
+                >
+                  Username
+                </label>
+                <input
+                  id="username"
+                  type="text"
+                  {...register("username")}
+                  className="w-full px-4 py-3 rounded-lg bg-gray-800/50 border border-purple-500/30 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  placeholder="your username"
+                  autoComplete="username"
+                />
+                <p className="text-sm text-white/70">
+                  https://acadxp.vercel.app/@{getValues("username")}
+                </p>
+                {errors.username && (
+                  <p className="text-sm text-pink-300">
+                    {errors.username.message}
+                  </p>
+                )}
+              </div>
+            )}
+            {step === 4 && (
+              <div className="space-y-4">
+                <div className="rounded-lg border border-purple-500/30 bg-gray-800/40 p-4">
+                  <h3 className="text-sm font-semibold text-purple-200 mb-3">
+                    Review your details
+                  </h3>
+                  <dl className="space-y-2">
+                    <div className="flex items-center justify-between gap-4">
+                      <dt className="text-sm text-purple-300/80">Name</dt>
+                      <dd className="text-sm text-white">
+                        {getValues("name")}
+                      </dd>
+                    </div>
+                    <div className="flex items-center justify-between gap-4">
+                      <dt className="text-sm text-purple-300/80">Email</dt>
+                      <dd className="text-sm text-white">
+                        {getValues("email")}
+                      </dd>
+                    </div>
+                    <div className="flex items-center justify-between gap-4">
+                      <dt className="text-sm text-purple-300/80">Username</dt>
+                      <dd className="text-sm text-white">
+                        @{getValues("username")}
+                      </dd>
+                    </div>
+                    <div className="flex items-center justify-between gap-4">
+                      <dt className="text-sm text-purple-300/80">Profile</dt>
+                      <dd className="text-xs text-white/90">
+                        https://acadxp.vercel.app/@{getValues("username")}
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+                <p className="text-xs text-purple-300/80">
+                  Password is kept secure and not shown here.
+                </p>
+              </div>
+            )}
+
+            {apiError && (
+              <p className="text-sm text-pink-300">{apiError.message}</p>
+            )}
+
+            <div className="flex gap-2">
+              {step > 0 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1 py-6 border-purple-500/50 text-purple-200"
+                  onClick={handleBack}
+                  disabled={isLoading || checkingEmail || checkingUsername}
+                >
+                  Back
+                </Button>
+              )}
+
+              {step < 4 ? (
+                <Button
+                  type="submit"
+                  className="flex-1 py-6 text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500"
+                  disabled={isLoading || checkingEmail || checkingUsername}
+                >
+                  {checkingEmail || checkingUsername ? "Checking..." : "Next"}
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  className="flex-1 py-6 text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Creating..." : "Create Account"}
+                </Button>
+              )}
+            </div>
 
             <p className="text-center text-sm text-purple-300">
               Already have an account?{" "}
