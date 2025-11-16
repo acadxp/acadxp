@@ -35,7 +35,7 @@ export default function LoginPage() {
       console.log("Login successful:", data);
       setErrorMessage(null);
       router.push("/dashboard");
-    } catch (error: any) {
+    } catch (error: unknown) {
       setErrorMessage(
         getErrorMessage(error) ||
           "Login failed. Please check your credentials and try again."

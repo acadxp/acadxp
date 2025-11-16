@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent, type MouseEvent } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -69,13 +69,21 @@ export default function SignupPage() {
       router.push("/dashboard");
       console.log("Signup successful:", data);
     },
-    onError: (error: any) => {
-      alert(
-        error.response?.data?.message || "Signup failed. Please try again."
-      );
-      setApiError({
-        message: error.response?.data?.message || "Signup failed.",
-      });
+    onError: (error: unknown) => {
+      let message = "Signup failed.";
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "response" in error &&
+        (error as { response?: { data?: { message?: string } } }).response?.data
+          ?.message
+      ) {
+        message =
+          (error as { response?: { data?: { message?: string } } }).response!
+            .data!.message || message;
+      }
+      alert(`${message} Please try again.`);
+      setApiError({ message });
     },
   });
 
@@ -115,10 +123,12 @@ export default function SignupPage() {
         } else {
           clearErrors("email");
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const msg =
+          err instanceof Error ? err.message : "Could not verify email.";
         setError("email", {
           type: "manual",
-          message: err?.message || "Could not verify email.",
+          message: msg,
         });
         return;
       } finally {
@@ -142,10 +152,12 @@ export default function SignupPage() {
         } else {
           clearErrors("username");
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const msg =
+          err instanceof Error ? err.message : "Could not verify username.";
         setError("username", {
           type: "manual",
-          message: err?.message || "Could not verify username.",
+          message: msg,
         });
         return;
       } finally {
@@ -341,15 +353,21 @@ export default function SignupPage() {
                   <dl className="space-y-2">
                     <div className="flex items-center justify-between gap-4">
                       <dt className="text-sm text-purple-300/80">Name</dt>
-                      <dd className="text-sm text-white">{getValues("name")}</dd>
+                      <dd className="text-sm text-white">
+                        {getValues("name")}
+                      </dd>
                     </div>
                     <div className="flex items-center justify-between gap-4">
                       <dt className="text-sm text-purple-300/80">Email</dt>
-                      <dd className="text-sm text-white">{getValues("email")}</dd>
+                      <dd className="text-sm text-white">
+                        {getValues("email")}
+                      </dd>
                     </div>
                     <div className="flex items-center justify-between gap-4">
                       <dt className="text-sm text-purple-300/80">Username</dt>
-                      <dd className="text-sm text-white">@{getValues("username")}</dd>
+                      <dd className="text-sm text-white">
+                        @{getValues("username")}
+                      </dd>
                     </div>
                     <div className="flex items-center justify-between gap-4">
                       <dt className="text-sm text-purple-300/80">Profile</dt>
