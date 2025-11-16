@@ -11,6 +11,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { registerUser } from "@/lib/api";
+import type { RegisterUserPayload } from "../../../types/user";
 
 const schema = z
   .object({
@@ -18,6 +19,7 @@ const schema = z
     email: z.email("Invalid email address"),
     password: z.string().min(8, "Password must be at least 8 characters"),
     confirmPassword: z.string(),
+    username: z.string().min(3, "Username must be at least 3 characters"),
   })
   .refine((vals) => vals.password === vals.confirmPassword, {
     message: "Passwords must match.",
@@ -29,6 +31,7 @@ type FormValues = z.infer<typeof schema>;
 export default function SignupPage() {
   const router = useRouter();
   const [step, setStep] = useState(0);
+  const [apiError, setApiError] = useState<null | { message: string }>(null);
 
   const {
     register,
@@ -39,33 +42,42 @@ export default function SignupPage() {
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     mode: "onTouched",
-    defaultValues: { name: "", email: "", password: "", confirmPassword: "" },
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      username: "",
+    },
   });
 
   const signupMutation = useMutation({
-    mutationFn: async (payload: {
-      name: string;
-      email: string;
-      password: string;
-    }) => {
+    mutationFn: async (payload: RegisterUserPayload) => {
       const response = await registerUser(payload);
       return response;
     },
-    onSuccess: () => {
-      router.push("/login");
+    onSuccess: (data) => {
+      router.push("/dashboard");
+      console.log("Signup successful:", data);
     },
     onError: (error: any) => {
       alert(
         error.response?.data?.message || "Signup failed. Please try again."
       );
+      setApiError({
+        message: error.response?.data?.message || "Signup failed.",
+      });
     },
   });
+
+  const isLoading = signupMutation.isPending;
 
   const fields: (keyof FormValues)[] = [
     "name",
     "email",
     "password",
     "confirmPassword",
+    "username",
   ];
 
   const handleNext = async (e: React.FormEvent) => {
@@ -75,11 +87,19 @@ export default function SignupPage() {
     if (valid) {
       setStep((prev) => prev + 1);
     }
+
+    if (apiError) {
+      setApiError(null);
+    }
   };
 
   const handleBack = (e: React.MouseEvent) => {
     e.preventDefault();
     setStep((s) => Math.max(0, s - 1));
+
+    if (apiError) {
+      setApiError(null);
+    }
   };
 
   const onSubmit = (vals: FormValues) => {
@@ -87,11 +107,9 @@ export default function SignupPage() {
       name: vals.name.trim(),
       email: vals.email.trim(),
       password: vals.password,
+      username: vals.username.trim(),
     });
   };
-
-  const isLoading = signupMutation.isPending;
-  const apiError = signupMutation.error as Error | undefined;
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-gray-900 via-purple-900 to-black flex items-center justify-center p-4">
@@ -123,11 +141,11 @@ export default function SignupPage() {
         </CardHeader>
         <CardContent>
           <form
-            onSubmit={step < 3 ? handleNext : handleSubmit(onSubmit)}
+            onSubmit={step < 4 ? handleNext : handleSubmit(onSubmit)}
             className="space-y-4"
           >
             <p className="text-xs text-purple-300 text-center">
-              Step {step + 1} of 4
+              Step {step + 1} of 5
             </p>
 
             {step === 0 && (
@@ -177,49 +195,75 @@ export default function SignupPage() {
             )}
 
             {step === 2 && (
-              <div className="space-y-2">
-                <label
-                  htmlFor="password"
-                  className="text-sm font-medium text-purple-200"
-                >
-                  Password
-                </label>
-                <input
-                  id="password"
-                  type="password"
-                  {...register("password")}
-                  className="w-full px-4 py-3 rounded-lg bg-gray-800/50 border border-purple-500/30 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  placeholder="••••••••"
-                  autoComplete="new-password"
-                />
-                <p className="text-xs text-purple-300">Min 8 characters.</p>
-                {errors.password && (
-                  <p className="text-sm text-pink-300">
-                    {errors.password.message}
-                  </p>
-                )}
-              </div>
+              <>
+                <div className="space-y-2">
+                  <label
+                    htmlFor="password"
+                    className="text-sm font-medium text-purple-200"
+                  >
+                    Password
+                  </label>
+                  <input
+                    id="password"
+                    type="password"
+                    {...register("password")}
+                    className="w-full px-4 py-3 rounded-lg bg-gray-800/50 border border-purple-500/30 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    placeholder="••••••••"
+                    autoComplete="new-password"
+                  />
+                  <p className="text-xs text-purple-300">Min 8 characters.</p>
+                  {errors.password && (
+                    <p className="text-sm text-pink-300">
+                      {errors.password.message}
+                    </p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <label
+                    htmlFor="confirmPassword"
+                    className="text-sm font-medium text-purple-200"
+                  >
+                    Confirm Password
+                  </label>
+                  <input
+                    id="confirmPassword"
+                    type="password"
+                    {...register("confirmPassword")}
+                    className="w-full px-4 py-3 rounded-lg bg-gray-800/50 border border-purple-500/30 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    placeholder="••••••••"
+                    autoComplete="new-password"
+                  />
+                  {errors.confirmPassword && (
+                    <p className="text-sm text-pink-300">
+                      {errors.confirmPassword.message}
+                    </p>
+                  )}
+                </div>
+              </>
             )}
 
             {step === 3 && (
               <div className="space-y-2">
                 <label
-                  htmlFor="confirmPassword"
+                  htmlFor="username"
                   className="text-sm font-medium text-purple-200"
                 >
-                  Confirm Password
+                  Username
                 </label>
                 <input
-                  id="confirmPassword"
-                  type="password"
-                  {...register("confirmPassword")}
+                  id="username"
+                  type="text"
+                  {...register("username")}
                   className="w-full px-4 py-3 rounded-lg bg-gray-800/50 border border-purple-500/30 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  placeholder="••••••••"
-                  autoComplete="new-password"
+                  placeholder="your username"
+                  autoComplete="username"
                 />
-                {errors.confirmPassword && (
+                <p className="text-sm text-white/70">
+                  https://acadxp.vercel.app/@{getValues("username")}
+                </p>
+                {errors.username && (
                   <p className="text-sm text-pink-300">
-                    {errors.confirmPassword.message}
+                    {errors.username.message}
                   </p>
                 )}
               </div>
@@ -242,7 +286,7 @@ export default function SignupPage() {
                 </Button>
               )}
 
-              {step < 3 ? (
+              {step < 4 ? (
                 <Button
                   type="submit"
                   className="flex-1 py-6 text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500"
