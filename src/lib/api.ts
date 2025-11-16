@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { RegisterUserPayload } from "../types/user";
+import type { RegisterUserPayload, LoginUserPayload } from "../types/user";
 
 const api = axios.create({
   baseURL: "http://localhost:8000/api",
@@ -25,6 +25,14 @@ export const registerUser = async ({
     email,
     password,
     username,
+  });
+  return response.data;
+};
+
+export const loginUser = async ({ email, password }: LoginUserPayload) => {
+  const response = await api.post("/v1/auth/login", {
+    email,
+    password,
   });
   return response.data;
 };

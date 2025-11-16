@@ -2,18 +2,45 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
+import { z } from "zod";
+import { loginUser } from "@/lib/api";
+import { getErrorMessage } from "@/lib/utils";
+
+const loginSchema = z.object({
+  email: z.email("Invalid email address"),
+  password: z.string(),
+});
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement login logic
-    console.log("Login:", { email, password });
+    const result = loginSchema.safeParse({ email, password });
+
+    if (!result.success) {
+      setErrorMessage("Please enter a valid email and password.");
+    }
+
+    try {
+      const data = await loginUser({ email, password });
+      // TODO : store Token in localstorage / manage with Zustand
+      console.log("Login successful:", data);
+      setErrorMessage(null);
+      router.push("/dashboard");
+    } catch (error: any) {
+      setErrorMessage(
+        getErrorMessage(error) ||
+          "Login failed. Please check your credentials and try again."
+      );
+    }
   };
 
   return (
@@ -77,6 +104,10 @@ export default function LoginPage() {
             >
               Login
             </Button>
+
+            {errorMessage && (
+              <p className="text-center text-sm text-red-500">{errorMessage}</p>
+            )}
 
             <p className="text-center text-sm text-purple-300">
               Do not have an account?{" "}
