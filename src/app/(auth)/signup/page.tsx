@@ -67,7 +67,6 @@ export default function SignupPage() {
     },
     onSuccess: (data) => {
       router.push("/dashboard");
-      console.log("Signup successful:", data);
     },
     onError: (error: unknown) => {
       let message = "Signup failed.";

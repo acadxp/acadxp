@@ -1,7 +1,9 @@
+"use client";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { useRouter } from "next/navigation";
 import useAuthStore from "@/store/AuthStore";
+import { useEffect } from "react";
 
 export default function DashboardLayout({
   children,
@@ -10,12 +12,15 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const { user, token } = useAuthStore();
-  const isAuthenticated = !!user && !!token;
+  const isLoggedIn = !!user && !!token;
 
-  if (!isAuthenticated) {
-    router.push("/login");
-    return null;
-  }
+  // useEffect(() => {
+  //   if (!isLoggedIn) {
+  //     router.push("/login");
+  //   }
+  // }, [isLoggedIn, router]);
+
+  // if (!isLoggedIn) return null;
   return (
     <div className="min-h-screen flex flex-col bg-gray-900">
       <Header />
