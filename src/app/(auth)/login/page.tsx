@@ -32,9 +32,8 @@ export default function LoginPage() {
     try {
       const data = await loginUser({ email, password });
       // TODO : store Token in localstorage / manage with Zustand
-      console.log("Login successful:", data);
-      setErrorMessage(null);
       router.push("/dashboard");
+      setErrorMessage(null);
     } catch (error: unknown) {
       setErrorMessage(
         getErrorMessage(error) ||
