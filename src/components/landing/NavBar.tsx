@@ -7,7 +7,7 @@ const NavBar = () => {
   const router = useRouter();
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-20">
+    <header className="nav-blur fixed top-0 left-0 right-0 z-20">
       <div className="mx-auto max-w-6xl px-6 py-4 flex items-center justify-between">
         {/* Left: Logo */}
         <Link href="/" className="flex items-center gap-3">

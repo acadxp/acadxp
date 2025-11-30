@@ -37,6 +37,21 @@
     min-height: 100vh;
     padding-top: 88px; /* offset for fixed navbar */
   }
+
+  /* Base navbar blur and tint */
+  .nav-blur {
+    background-color: rgba(20, 22, 35, 0.35);
+    -webkit-backdrop-filter: saturate(120%) blur(6px);
+    backdrop-filter: saturate(120%) blur(6px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  /* Intensify blur/tint when body/content is hovered to avoid overlap */
+  body:hover .nav-blur {
+    background-color: rgba(24, 28, 48, 0.55);
+    -webkit-backdrop-filter: saturate(140%) blur(10px);
+    backdrop-filter: saturate(140%) blur(10px);
+  }
 }
 
 @layer utilities {
