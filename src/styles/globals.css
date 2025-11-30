@@ -9,6 +9,49 @@
   * {
     @apply border-border outline-ring/50;
   }
+
+  .hero-section {
+    /* Use your provided hero image with a subtle dark gradient overlay */
+    /* Use your provided hero image with a lighter gradient overlay */
+    background: radial-gradient(
+        800px 400px at 10% 0%,
+        rgba(124, 58, 237, 0.2) 0%,
+        rgba(124, 58, 237, 0) 60%
+      ),
+      radial-gradient(
+        800px 400px at 90% 0%,
+        rgba(236, 72, 153, 0.14) 0%,
+        rgba(236, 72, 153, 0) 60%
+      ),
+      linear-gradient(
+        180deg,
+        rgba(7, 7, 12, 0.55) 0%,
+        rgba(10, 10, 16, 0.5) 50%,
+        rgba(7, 7, 12, 0.55) 100%
+      ),
+      url("../../public/assets/img/hero-bg.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: relative;
+    min-height: 100vh;
+    padding-top: 88px; /* offset for fixed navbar */
+  }
+
+  /* Base navbar blur and tint */
+  .nav-blur {
+    background-color: rgba(20, 22, 35, 0.35);
+    -webkit-backdrop-filter: saturate(120%) blur(6px);
+    backdrop-filter: saturate(120%) blur(6px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  /* Intensify blur/tint when body/content is hovered to avoid overlap */
+  body:hover .nav-blur {
+    background-color: rgba(24, 28, 48, 0.55);
+    -webkit-backdrop-filter: saturate(140%) blur(10px);
+    backdrop-filter: saturate(140%) blur(10px);
+  }
 }
 
 @layer utilities {
@@ -136,6 +179,11 @@
 
   .animate-glow {
     animation: glow 2s ease-in-out infinite alternate;
+  }
+  .press-start-2p-regular {
+    font-family: "Press Start 2P", system-ui;
+    font-weight: 400;
+    font-style: normal;
   }
 }
 
