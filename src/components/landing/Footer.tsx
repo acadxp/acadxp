@@ -42,8 +42,8 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="flex flex-col text-white bg-gradient-to-b from-gray-900 via-slate-900 to-zinc-900 relative">
-      <div className=" mx-auto px-6 py-8">
+    <footer className="flex flex-col text-white bg-black relative">
+      <div className=" px-3 py-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
