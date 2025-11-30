@@ -48,24 +48,13 @@ const Hero = () => {
 
   return (
     <section className="hero-section max-h-screen  flex flex-col items-center justify-center px-4 py-20 text-white">
-      <p className="mb-5 bg-purple-900 p-2 rounded-4xl text-center">
-        Coming soon!!!
-      </p>
-      <h1 className="text-4xl sm:text-6xl font-bold text-center bg-gradient-to-r from-white to-zinc-300 bg-clip-text text-transparent my-2">
+      <h1 className="text-4xl press-start-2p-regular sm:text-6xl font-bold text-center my-2">
         Turn Your Degree into a Game
       </h1>
-      <p className="max-w-xl text-center text-lg text-zinc-400 my-2">
+      <p className="max-w-xl text-center text-xl text-white my-2">
         Experience a new way to learn: track your progress, earn rewards, and
         level up your academic journey with AcadXP.
       </p>
-
-      {/* Get Started Button */}
-      <Link
-        href="/start"
-        className="mt-8 inline-flex align-middle px-8 py-4 bg-gradient-to-r from-purple-500 to-fuchsia-600 text-white rounded-lg font-medium hover:opacity-90 transition shadow-[0_0_20px_rgba(168,85,247,0.5)]"
-      >
-        Get Started
-      </Link>
 
       {/* Waitlist Form */}
       <form
