@@ -9,6 +9,10 @@
   * {
     @apply border-border outline-ring/50;
   }
+
+  .hero-section {
+    background: rgba(0, 0, 0, 0.5) url("../../public/assets/img/hero-bg.png");
+  }
 }
 
 @layer utilities {
