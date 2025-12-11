@@ -16,6 +16,7 @@ import {
   checkUsernameAvailability,
 } from "@/lib/api";
 import type { RegisterUserPayload } from "../../../types/user";
+import useAuthStore from "@/store/AuthStore";
 
 const schema = z
   .object({
@@ -36,6 +37,7 @@ export default function SignupPage() {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [apiError, setApiError] = useState<null | { message: string }>(null);
+  const { setUser, setToken } = useAuthStore();
 
   const {
     register,
@@ -66,6 +68,16 @@ export default function SignupPage() {
       return response;
     },
     onSuccess: (data) => {
+      // Store token and user info in Zustand
+      if (data.token) {
+        setToken(data.token);
+        localStorage.setItem("auth_token", data.token);
+      }
+
+      if (data.user) {
+        setUser(data.user);
+      }
+
       router.push("/dashboard");
     },
     onError: (error: unknown) => {
