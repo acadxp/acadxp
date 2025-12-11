@@ -14,13 +14,13 @@ export default function DashboardLayout({
   const { user, token } = useAuthStore();
   const isLoggedIn = !!user && !!token;
 
-  // useEffect(() => {
-  //   if (!isLoggedIn) {
-  //     router.push("/login");
-  //   }
-  // }, [isLoggedIn, router]);
+  useEffect(() => {
+    if (!isLoggedIn) {
+      router.push("/login");
+    }
+  }, [isLoggedIn, router]);
 
-  // if (!isLoggedIn) return null;
+  if (!isLoggedIn) return null;
   return (
     <div className="min-h-screen flex flex-col bg-gray-900">
       <Header />

@@ -9,6 +9,7 @@ import Image from "next/image";
 import { z } from "zod";
 import { loginUser } from "@/lib/api";
 import { getErrorMessage } from "@/lib/utils";
+import useAuthStore from "@/store/AuthStore";
 
 const loginSchema = z.object({
   email: z.email("Invalid email address"),
@@ -20,6 +21,8 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const { setUser, setToken } = useAuthStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,18 +30,32 @@ export default function LoginPage() {
 
     if (!result.success) {
       setErrorMessage("Please enter a valid email and password.");
+      return;
     }
 
+    setIsLoading(true);
     try {
       const data = await loginUser({ email, password });
-      // TODO : store Token in localstorage / manage with Zustand
-      router.push("/dashboard");
+
+      // Store token and user info in Zustand
+      if (data.token) {
+        setToken(data.token);
+        localStorage.setItem("auth_token", data.token);
+      }
+
+      if (data.user) {
+        setUser(data.user);
+      }
+
       setErrorMessage(null);
+      router.push("/dashboard");
     } catch (error: unknown) {
       setErrorMessage(
         getErrorMessage(error) ||
           "Login failed. Please check your credentials and try again."
       );
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -100,8 +117,9 @@ export default function LoginPage() {
             <Button
               type="submit"
               className="w-full py-6 text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500"
+              disabled={isLoading}
             >
-              Login
+              {isLoading ? "Logging in..." : "Login"}
             </Button>
 
             {errorMessage && (
