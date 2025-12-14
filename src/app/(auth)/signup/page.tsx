@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -39,6 +39,15 @@ export default function SignupPage() {
   const [apiError, setApiError] = useState<null | { message: string }>(null);
   const { setUser, setToken } = useAuthStore();
 
+  // Restore auth state from localStorage on mount
+  useEffect(() => {
+    const token = localStorage.getItem("auth_token");
+    if (token) {
+      setToken(token);
+      router.push("/dashboard");
+    }
+  }, [setToken, router]);
+
   const {
     register,
     handleSubmit,
@@ -68,17 +77,21 @@ export default function SignupPage() {
       return response;
     },
     onSuccess: (data) => {
-      // Store token and user info in Zustand
-      if (data.token) {
-        setToken(data.token);
-        localStorage.setItem("auth_token", data.token);
+      // Store token and user info in localStorage and Zustand
+      if (data.accessToken) {
+        localStorage.setItem("auth_token", data.accessToken);
+        setToken(data.accessToken);
       }
 
       if (data.user) {
+        localStorage.setItem("user", JSON.stringify(data.user));
         setUser(data.user);
       }
 
-      router.push("/dashboard");
+      // Delay navigation to ensure localStorage is synced
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 100);
     },
     onError: (error: unknown) => {
       let message = "Signup failed.";

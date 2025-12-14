@@ -16,7 +16,7 @@ const Hero = () => {
       return response;
     },
     onSuccess: (data) => {
-      setSuccessMessage(data?.message || "Successfully joined the waitlist!");
+      setSuccessMessage(data?.message);
       setErrorMessage("");
       setWaitlistEmail("");
     },

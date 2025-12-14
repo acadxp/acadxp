@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,15 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const { setUser, setToken } = useAuthStore();
 
+  // Restore auth state from localStorage on mount
+  useEffect(() => {
+    const token = localStorage.getItem("auth_token");
+    if (token) {
+      setToken(token);
+      router.push("/dashboard");
+    }
+  }, [setToken, router]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const result = loginSchema.safeParse({ email, password });
@@ -37,18 +46,22 @@ export default function LoginPage() {
     try {
       const data = await loginUser({ email, password });
 
-      // Store token and user info in Zustand
-      if (data.token) {
-        setToken(data.token);
-        localStorage.setItem("auth_token", data.token);
+      // Store token and user info in localStorage and Zustand
+      if (data.accessToken) {
+        localStorage.setItem("auth_token", data.accessToken);
+        setToken(data.accessToken);
       }
 
       if (data.user) {
+        localStorage.setItem("user", JSON.stringify(data.user));
         setUser(data.user);
       }
 
       setErrorMessage(null);
-      router.push("/dashboard");
+      // Delay navigation to ensure localStorage is synced
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 100);
     } catch (error: unknown) {
       setErrorMessage(
         getErrorMessage(error) ||
