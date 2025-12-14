@@ -20,7 +20,7 @@ export default function DashboardLayout({
     }
   }, [isLoggedIn, router]);
 
-  if (!isLoggedIn) return null;
+  // if (!isLoggedIn) return null;
   return (
     <div className="min-h-screen flex flex-col bg-gray-900">
       <Header />
