@@ -10,13 +10,10 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import {
-  registerUser,
-  checkEmailAvailability,
-  checkUsernameAvailability,
-} from "@/lib/api";
+import { checkEmailAvailability } from "@/lib/api";
 import type { RegisterUserPayload } from "../../../types/user";
 import useAuthStore from "@/store/AuthStore";
+import { authClient } from "@/lib/auth-client";
 
 const schema = z
   .object({
@@ -24,7 +21,6 @@ const schema = z
     email: z.email("Invalid email address"),
     password: z.string().min(8, "Password must be at least 8 characters"),
     confirmPassword: z.string(),
-    username: z.string().min(3, "Username must be at least 3 characters"),
   })
   .refine((vals) => vals.password === vals.confirmPassword, {
     message: "Passwords must match.",
@@ -64,61 +60,55 @@ export default function SignupPage() {
       email: "",
       password: "",
       confirmPassword: "",
-      username: "",
     },
   });
   // Loading flags for async field checks
   const [checkingEmail, setCheckingEmail] = useState(false);
-  const [checkingUsername, setCheckingUsername] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const signupMutation = useMutation({
     mutationFn: async (payload: RegisterUserPayload) => {
-      const response = await registerUser(payload);
-      return response;
-    },
-    onSuccess: (data) => {
-      // Store token and user info in localStorage and Zustand
-      if (data.accessToken) {
-        localStorage.setItem("auth_token", data.accessToken);
-        setToken(data.accessToken);
-      }
+      const { data, error } = await authClient.signUp.email(
+        {
+          ...payload,
+        },
+        {
+          onRequest: () => {
+            setIsLoading(true);
+          },
+          onSuccess: (ctx) => {
+            setIsLoading(false);
+            if (ctx.data.token) {
+              localStorage.setItem("acapxp_auth_token", ctx.data.token);
+              setToken(ctx.data.token);
+            }
 
-      if (data.user) {
-        localStorage.setItem("user", JSON.stringify(data.user));
-        setUser(data.user);
-      }
+            if (ctx.data.user) {
+              localStorage.setItem(
+                "acapxp_user",
+                JSON.stringify(ctx.data.user)
+              );
+              setUser(ctx.data.user);
+            }
 
-      // Delay navigation to ensure localStorage is synced
-      setTimeout(() => {
-        router.push("/dashboard");
-      }, 100);
-    },
-    onError: (error: unknown) => {
-      let message = "Signup failed.";
-      if (
-        typeof error === "object" &&
-        error !== null &&
-        "response" in error &&
-        (error as { response?: { data?: { message?: string } } }).response?.data
-          ?.message
-      ) {
-        message =
-          (error as { response?: { data?: { message?: string } } }).response!
-            .data!.message || message;
-      }
-      alert(`${message} Please try again.`);
-      setApiError({ message });
+            router.push("/dashboard");
+          },
+          onError: (ctx) => {
+            setIsLoading(false);
+            if (ctx.error) {
+              setApiError({ message: ctx.error.message });
+            }
+          },
+        }
+      );
     },
   });
-
-  const isLoading = signupMutation.isPending;
 
   const fields: (keyof FormValues)[] = [
     "name",
     "email",
     "password",
     "confirmPassword",
-    "username",
   ];
 
   const handleNext = async (e: React.FormEvent) => {
@@ -160,35 +150,6 @@ export default function SignupPage() {
       }
     }
 
-    // Username uniqueness check on step 3
-    if (step === 3) {
-      const username = getValues("username").trim();
-      if (!username) return; // safety guard
-      setCheckingUsername(true);
-      try {
-        const available = await checkUsernameAvailability(username);
-        if (!available) {
-          setError("username", {
-            type: "manual",
-            message: "Username is taken.",
-          });
-          return;
-        } else {
-          clearErrors("username");
-        }
-      } catch (err: unknown) {
-        const msg =
-          err instanceof Error ? err.message : "Could not verify username.";
-        setError("username", {
-          type: "manual",
-          message: msg,
-        });
-        return;
-      } finally {
-        setCheckingUsername(false);
-      }
-    }
-
     // Advance only after passing all checks
     setStep((prev) => prev + 1);
   };
@@ -207,7 +168,6 @@ export default function SignupPage() {
       name: vals.name.trim(),
       email: vals.email.trim(),
       password: vals.password,
-      username: vals.username.trim(),
     });
   };
 
@@ -228,24 +188,22 @@ export default function SignupPage() {
             {step === 0 && "What's your name, Adventurer?"}
             {step === 1 && "Where should we send your XP updates?"}
             {step === 2 && "Create a secure password for your quest chest"}
-            {step === 3 && "Choose a public handle — your academy tag"}
-            {step === 4 && "Ready to start your journey?"}
+            {step === 3 && "Ready to start your journey?"}
           </CardTitle>
           <p className="text-center text-sm text-purple-200/80">
             {step === 0 && "Let's start your learning journey"}
             {step === 1 && "We'll send updates, never spam"}
             {step === 2 && "Keep your progress safe and secure"}
-            {step === 3 && "This will be your unique identifier"}
-            {step === 4 && "Create your account and unlock Level 1!"}
+            {step === 3 && "Create your account and unlock Level 1!"}
           </p>
         </CardHeader>
         <CardContent>
           <form
-            onSubmit={step < 4 ? handleNext : handleSubmit(onSubmit)}
+            onSubmit={step < 3 ? handleNext : handleSubmit(onSubmit)}
             className="space-y-4"
           >
             <p className="text-xs text-purple-300 text-center">
-              Step {step + 1} of 5
+              Step {step + 1} of 4
             </p>
 
             {step === 0 && (
@@ -343,32 +301,6 @@ export default function SignupPage() {
             )}
 
             {step === 3 && (
-              <div className="space-y-2">
-                <label
-                  htmlFor="username"
-                  className="text-sm font-medium text-purple-200"
-                >
-                  Username
-                </label>
-                <input
-                  id="username"
-                  type="text"
-                  {...register("username")}
-                  className="w-full px-4 py-3 rounded-lg bg-gray-800/50 border border-purple-500/30 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  placeholder="your username"
-                  autoComplete="username"
-                />
-                <p className="text-sm text-white/70">
-                  https://acadxp.vercel.app/@{getValues("username")}
-                </p>
-                {errors.username && (
-                  <p className="text-sm text-pink-300">
-                    {errors.username.message}
-                  </p>
-                )}
-              </div>
-            )}
-            {step === 4 && (
               <div className="space-y-4">
                 <div className="rounded-lg border border-purple-500/30 bg-gray-800/40 p-4">
                   <h3 className="text-sm font-semibold text-purple-200 mb-3">
@@ -385,18 +317,6 @@ export default function SignupPage() {
                       <dt className="text-sm text-purple-300/80">Email</dt>
                       <dd className="text-sm text-white">
                         {getValues("email")}
-                      </dd>
-                    </div>
-                    <div className="flex items-center justify-between gap-4">
-                      <dt className="text-sm text-purple-300/80">Username</dt>
-                      <dd className="text-sm text-white">
-                        @{getValues("username")}
-                      </dd>
-                    </div>
-                    <div className="flex items-center justify-between gap-4">
-                      <dt className="text-sm text-purple-300/80">Profile</dt>
-                      <dd className="text-xs text-white/90">
-                        https://acadxp.vercel.app/@{getValues("username")}
                       </dd>
                     </div>
                   </dl>
@@ -418,19 +338,19 @@ export default function SignupPage() {
                   variant="outline"
                   className="flex-1 py-6 border-purple-500/50 text-purple-200"
                   onClick={handleBack}
-                  disabled={isLoading || checkingEmail || checkingUsername}
+                  disabled={isLoading || checkingEmail}
                 >
                   Back
                 </Button>
               )}
 
-              {step < 4 ? (
+              {step < 3 ? (
                 <Button
                   type="submit"
                   className="flex-1 py-6 text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500"
-                  disabled={isLoading || checkingEmail || checkingUsername}
+                  disabled={isLoading || checkingEmail}
                 >
-                  {checkingEmail || checkingUsername ? "Checking..." : "Next"}
+                  {checkingEmail ? "Checking..." : "Next"}
                 </Button>
               ) : (
                 <Button

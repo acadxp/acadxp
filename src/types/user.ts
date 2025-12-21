@@ -2,7 +2,6 @@ export interface RegisterUserPayload {
   name: string;
   email: string;
   password: string;
-  username: string;
 }
 
 export interface LoginUserPayload {
@@ -14,7 +13,6 @@ export interface UserInfos {
   id?: string;
   email?: string;
   name?: string;
-  username?: string;
 }
 
 // flex on the right state later

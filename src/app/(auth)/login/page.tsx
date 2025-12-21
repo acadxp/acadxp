@@ -52,12 +52,12 @@ export default function LoginPage() {
 
       // Store token and user info in localStorage and Zustand
       if (data?.token) {
-        localStorage.setItem("auth_token", data.token);
+        localStorage.setItem("acapxp_auth_token", data.token);
         setToken(data.token);
       }
 
       if (data?.user) {
-        localStorage.setItem("user", JSON.stringify(data.user));
+        localStorage.setItem("acapxp_user", JSON.stringify(data.user));
         setUser(data.user);
       }
 
