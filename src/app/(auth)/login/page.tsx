@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
 import { z } from "zod";
-import { loginUser } from "@/lib/api";
+
 import { getErrorMessage } from "@/lib/utils";
+import { authClient } from "@/lib/auth-client";
 import useAuthStore from "@/store/AuthStore";
 
 const loginSchema = z.object({
@@ -44,24 +45,29 @@ export default function LoginPage() {
 
     setIsLoading(true);
     try {
-      const data = await loginUser({ email, password });
+      const { data, error } = await authClient.signIn.email({
+        email,
+        password,
+      });
 
       // Store token and user info in localStorage and Zustand
-      if (data.accessToken) {
-        localStorage.setItem("auth_token", data.accessToken);
-        setToken(data.accessToken);
+      if (data?.token) {
+        localStorage.setItem("auth_token", data.token);
+        setToken(data.token);
       }
 
-      if (data.user) {
+      if (data?.user) {
         localStorage.setItem("user", JSON.stringify(data.user));
         setUser(data.user);
       }
 
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      router.push("/dashboard");
+
       setErrorMessage(null);
-      // Delay navigation to ensure localStorage is synced
-      setTimeout(() => {
-        router.push("/dashboard");
-      }, 100);
     } catch (error: unknown) {
       setErrorMessage(
         getErrorMessage(error) ||
