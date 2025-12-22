@@ -18,19 +18,9 @@ export const registerUser = async ({
   name,
   email,
   password,
-  username,
 }: RegisterUserPayload) => {
   const response = await api.post("/v1/auth/signup", {
     name,
-    email,
-    password,
-    username,
-  });
-  return response.data;
-};
-
-export const loginUser = async ({ email, password }: LoginUserPayload) => {
-  const response = await api.post("/v1/auth/login", {
     email,
     password,
   });
@@ -38,7 +28,7 @@ export const loginUser = async ({ email, password }: LoginUserPayload) => {
 };
 
 export const checkEmailAvailability = async (email: string) => {
-  const response = await api.get(`/v1/auth/check-email?email=${email}`);
+  const response = await api.get(`/v1/profile/check-email?email=${email}`);
 
   const isAvailable =
     response.data.message === "Email is available" ? true : false;
@@ -47,7 +37,7 @@ export const checkEmailAvailability = async (email: string) => {
 
 export const checkUsernameAvailability = async (username: string) => {
   const response = await api.get(
-    `/v1/auth/check-username?username=${username}`
+    `/v1/profile/check-username?username=${username}`
   );
 
   const isAvailable =
