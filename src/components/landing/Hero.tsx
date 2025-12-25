@@ -12,7 +12,7 @@ const Hero = () => {
           Turn Your Degree into a Game
         </h1>
 
-        <p className="max-w-2xl text-center text-3xl sm:text-xl text-white/90 mb-8 drop-shadow-md leading-relaxed">
+        <p className="max-w-2xl text-center text-base sm:text-xl text-white mb-8 drop-shadow-md leading-relaxed">
           Experience a new way to learn: track your progress, earn rewards, and
           level up your academic journey with AcadXP.
         </p>

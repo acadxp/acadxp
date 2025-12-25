@@ -77,7 +77,7 @@ const NavBar = () => {
               href="/signup"
               className="px-4 py-2 text-sm text-white bg-violet-600 hover:bg-violet-700 rounded-lg transition duration-200 font-medium"
             >
-              Sign Up
+              try for free
             </Link>
           </div>
 
@@ -136,7 +136,7 @@ const NavBar = () => {
                 className="block px-4 py-2 text-sm text-center text-white bg-violet-600 hover:bg-violet-700 rounded-lg transition font-medium"
                 onClick={() => setIsOpen(false)}
               >
-                Sign Up
+                try for free
               </Link>
             </div>
           </div>
