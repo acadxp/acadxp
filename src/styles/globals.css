@@ -52,6 +52,34 @@
     -webkit-backdrop-filter: saturate(140%) blur(10px);
     backdrop-filter: saturate(140%) blur(10px);
   }
+
+  /* Animated underline for nav links */
+  .nav-link {
+    position: relative;
+    display: inline-block;
+    color: #a1a1aa;
+  }
+
+  .nav-link::after {
+    content: "";
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #7c3aed, #a78bfa, #7c3aed);
+    box-shadow: 0 0 8px rgba(168, 85, 247, 0.6);
+    transition: width 0.3s ease;
+  }
+
+  .nav-link:hover {
+    color: #ffffff;
+  }
+
+  .nav-link:hover::after {
+    width: 100%;
+    box-shadow: 0 0 12px rgba(168, 85, 247, 0.8);
+  }
 }
 
 @layer utilities {
