@@ -5,7 +5,10 @@ import { ArrowRight } from "lucide-react";
 
 const Hero = () => {
   return (
-    <section className="hero-section relative max-h-screen flex flex-col items-center justify-center px-4 py-20 text-white overflow-hidden">
+    <section
+      id="home"
+      className="hero-section relative max-h-screen flex flex-col items-center justify-center px-4 py-20 text-white overflow-hidden"
+    >
       {/* Content container with subtle backdrop */}
       <div className="relative z-10 flex flex-col items-center justify-center text-center">
         <h1 className="text-4xl sm:text-6xl press-start-2p-regular text-center mb-4 drop-shadow-lg">
