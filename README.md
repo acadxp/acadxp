@@ -12,7 +12,7 @@ AcadXP is revolutionizing the way students experience their academic journey by 
 
 _Level up your education with AcadXP!_
 
-## ✨ Features
+## ✨ Features (development in progress)
 
 - 🎮 **Gamified Learning** - Turn your studies into an epic adventure with XP, levels, and achievements
 - 📊 **Progress Tracking** - Visualize your academic journey with intuitive dashboards
@@ -20,6 +20,10 @@ _Level up your education with AcadXP!_
 - 📚 **Course Management** - Organize and track all your courses in one place
 - 📈 **Analytics** - Get insights into your learning patterns and productivity
 - 🎯 **Goal Setting** - Set and achieve academic goals with progress tracking
+- 🔔 **Reminders & Notifications** - Stay on top of deadlines and important dates
+- 🌐 **Community Features** - Connect with fellow students and share your achievements
+- 🤖 **AI Challenge Generator** - Generate personalized challenges and quizzes based on your courses
+- 🎖️ **Skill Generator with Badges** - Earn skill badges by mastering topics and demonstrate your expertise
 
 ## 🚀 Getting Started
 
