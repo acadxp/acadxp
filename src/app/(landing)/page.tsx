@@ -7,9 +7,15 @@ export default function HomePage() {
   return (
     <main>
       <Hero />
-      <About />
-      <Features />
-      <Pricing />
+      <section id="about">
+        <About />
+      </section>
+      <section id="features">
+        <Features />
+      </section>
+      <section id="pricing">
+        <Pricing />
+      </section>
     </main>
   );
 }

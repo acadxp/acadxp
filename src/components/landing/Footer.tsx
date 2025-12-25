@@ -12,12 +12,12 @@ const Footer = () => {
     },
     {
       name: "Linkedin",
-      href: "https://linkedin.com",
+      href: "https://www.linkedin.com/company/acadxp/",
       icon: <Linkedin size={20} />,
     },
     {
       name: "Twitter",
-      href: "https://twitter.com",
+      href: "https://x.com/acadxp",
       icon: <Twitter size={20} />,
     },
   ];
@@ -38,6 +38,12 @@ const Footer = () => {
     { title: "Cookie Policy", link: "/cookie-policy" },
   ];
 
+  const navLinks = [
+    { title: "About", link: "/#about" },
+    { title: "Features", link: "/#features" },
+    { title: "Pricing", link: "/#pricing" },
+  ];
+
   return (
     <footer className="relative bg-black text-white overflow-hidden">
       {/* Gradient top border */}
@@ -46,7 +52,7 @@ const Footer = () => {
       <div className="px-4 sm:px-6 py-16 sm:py-20">
         <div className="mx-auto max-w-7xl">
           {/* Main footer content */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-12 mb-12">
             {/* Brand column */}
             <div className="space-y-6 md:col-span-1">
               <div className="flex items-center gap-3">
@@ -79,6 +85,27 @@ const Footer = () => {
                   </a>
                 ))}
               </div>
+            </div>
+
+            {/* Navigation column */}
+            <div className="space-y-4">
+              <h4 className="text-sm font-bold uppercase tracking-widest text-violet-400">
+                Platform
+              </h4>
+              <nav className="space-y-3">
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.title}
+                    href={link.link}
+                    className="block text-zinc-400 hover:text-white transition-colors text-sm group"
+                  >
+                    <span className="flex items-center gap-2">
+                      {link.title}
+                      <ArrowRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-1" />
+                    </span>
+                  </Link>
+                ))}
+              </nav>
             </div>
 
             {/* Support column */}
@@ -130,23 +157,21 @@ const Footer = () => {
               <h4 className="text-sm font-bold uppercase tracking-widest text-violet-400">
                 Stay Updated
               </h4>
-              <p className="text-zinc-400 text-sm">
+              <p className="text-zinc-400 text-sm leading-relaxed">
                 Get the latest features and updates delivered to your inbox.
               </p>
-              <form className="flex gap-2">
-                <div className="flex-1 relative group">
-                  <input
-                    type="email"
-                    placeholder="your@email.com"
-                    className="w-full px-4 py-2 bg-slate-900/50 border border-violet-500/30 rounded-lg text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-violet-500/60 transition-colors"
-                  />
-                </div>
+              <form className="flex flex-col gap-3 pt-2">
+                <input
+                  type="email"
+                  placeholder="your@email.com"
+                  className="w-full px-4 py-3 bg-slate-900/50 border border-violet-500/30 rounded-lg text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-violet-500/60 transition-colors"
+                />
                 <button
                   type="submit"
-                  className="px-3 py-2 bg-violet-600 hover:bg-violet-700 rounded-lg text-white font-medium transition-all duration-300 shadow-lg hover:shadow-violet-500/50 flex items-center gap-2"
+                  className="w-full px-4 py-3 bg-violet-600 hover:bg-violet-700 rounded-lg text-white font-medium transition-all duration-300 shadow-lg hover:shadow-violet-500/50 flex items-center justify-center gap-2"
                 >
                   <Mail className="w-4 h-4" />
-                  <span className="hidden sm:inline">Subscribe</span>
+                  <span>Subscribe</span>
                 </button>
               </form>
             </div>
