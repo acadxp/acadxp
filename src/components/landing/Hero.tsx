@@ -1,89 +1,40 @@
 "use client";
 
-import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { submitEmail } from "@/lib/api";
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 
 const Hero = () => {
-  const [waitlistEmail, setWaitlistEmail] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
-
-  const emailMutation = useMutation({
-    mutationFn: async (email: string) => {
-      const response = await submitEmail(email);
-      return response;
-    },
-    onSuccess: (data) => {
-      setSuccessMessage(data?.message);
-      setErrorMessage("");
-      setWaitlistEmail("");
-    },
-    onError: () => {
-      setErrorMessage("Failed to join the waitlist. Please try again.");
-      setSuccessMessage("");
-    },
-  });
-
-  const validateEmail = (email: string) =>
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMessage("");
-    setSuccessMessage("");
-
-    if (waitlistEmail.trim() === "") {
-      setErrorMessage("Email address cannot be empty.");
-      return;
-    }
-
-    if (!validateEmail(waitlistEmail)) {
-      setErrorMessage("Please enter a valid email address.");
-      return;
-    }
-    emailMutation.mutate(waitlistEmail);
-  };
-
   return (
-    <section className="hero-section max-h-screen  flex flex-col items-center justify-center px-4 py-20 text-white">
-      <h1 className="text-4xl press-start-2p-regular sm:text-6xl font-bold text-center my-2">
-        Turn Your Degree into a Game
-      </h1>
-      <p className="max-w-xl text-center text-xl text-white my-2">
-        Experience a new way to learn: track your progress, earn rewards, and
-        level up your academic journey with AcadXP.
-      </p>
+    <section
+      id="home"
+      className="hero-section relative max-h-screen flex flex-col items-center justify-center px-4 py-20 text-white overflow-hidden"
+    >
+      {/* Content container with subtle backdrop */}
+      <div className="relative z-10 flex flex-col items-center justify-center text-center">
+        <h1 className="text-4xl sm:text-6xl press-start-2p-regular text-center mb-4 drop-shadow-lg">
+          Turn Your Degree into a Game
+        </h1>
 
-      {/* Waitlist Form */}
-      <form
-        onSubmit={handleSubmit}
-        className="w-full flex items-center flex-col justify-center md:flex-row gap-4 mt-12"
-      >
-        <input
-          type="email"
-          id="waitlist-email"
-          placeholder="Email Address"
-          value={waitlistEmail}
-          onChange={(e) => setWaitlistEmail(e.target.value)}
-          className="border shadow-[0_0_20px_rgba(168,85,247,0.5)] rounded-lg px-4 py-3 w-full max-w-sm focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white border-zinc-700 text-black"
-        />
-        <button
-          type="submit"
-          disabled={emailMutation.isPending}
-          className="inline-flex align-middle px-8 py-4 hover:cursor-pointer bg-gradient-to-r from-purple-500 to-fuchsia-600 text-white rounded-lg font-medium hover:opacity-90 transition shadow-[0_0_20px_rgba(168,85,247,0.5)]"
-        >
-          {emailMutation.isPending ? "Submitting..." : "Join Waitlist"}
-        </button>
-      </form>
-      <div className="mt-3">
-        {errorMessage && (
-          <p className="text-red-500 mt-2 text-sm">{errorMessage}</p>
-        )}
-        {successMessage && (
-          <p className="text-green-500 mt-2 text-sm">{successMessage}</p>
-        )}
+        <p className="max-w-2xl text-center text-base sm:text-xl text-white mb-8 drop-shadow-md leading-relaxed">
+          Experience a new way to learn: track your progress, earn rewards, and
+          level up your academic journey with AcadXP.
+        </p>
+
+        {/* CTA Buttons */}
+        <div className="flex flex-col sm:flex-row gap-4 mt-8">
+          <Link href="/start">
+            <button className="px-8 py-4 bg-violet-600 hover:bg-violet-700 text-white font-bold text-lg rounded-lg transition-all duration-200 shadow-lg hover:shadow-violet-500/50 flex items-center gap-2 group">
+              <span>Get Started</span>
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </button>
+          </Link>
+          <a
+            href="#about"
+            className="px-8 py-4 border-2 border-white/60 hover:border-white text-white font-bold text-lg rounded-lg transition-all duration-200 hover:bg-white/10"
+          >
+            Learn More
+          </a>
+        </div>
       </div>
     </section>
   );
