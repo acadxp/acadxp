@@ -11,14 +11,14 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { user, token } = useAuthStore();
-  const isLoggedIn = !!user && !!token;
+  // const { user, token } = useAuthStore();
+  // const isLoggedIn = !!user && !!token;
 
-  useEffect(() => {
-    if (!isLoggedIn) {
-      router.push("/login");
-    }
-  }, [isLoggedIn, router]);
+  // useEffect(() => {
+  //   if (!isLoggedIn) {
+  //     router.push("/login");
+  //   }
+  // }, [isLoggedIn, router]);
 
   // if (!isLoggedIn) return null;
   return (

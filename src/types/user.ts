@@ -1,3 +1,5 @@
+import type { Session } from "better-auth/types";
+
 export interface RegisterUserPayload {
   name: string;
   email: string;
@@ -9,20 +11,12 @@ export interface LoginUserPayload {
   password: string;
 }
 
-export interface UserInfos {
-  id?: string;
-  email?: string;
-  name?: string;
-}
-
 // flex on the right state later
 export interface AuthState {
-  user: UserInfos | null;
-  token: string | null;
+  session: Session | null;
   error: string | null;
   loading: boolean;
-  setUser: (user: UserInfos) => void;
-  setToken: (token: string) => void;
+  setSession: (session: Session) => void;
   setError: (error: string) => void;
   logout: () => void;
 }

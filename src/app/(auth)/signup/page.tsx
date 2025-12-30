@@ -33,16 +33,6 @@ export default function SignupPage() {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [apiError, setApiError] = useState<null | { message: string }>(null);
-  const { setUser, setToken } = useAuthStore();
-
-  // Restore auth state from localStorage on mount
-  useEffect(() => {
-    const token = localStorage.getItem("auth_token");
-    if (token) {
-      setToken(token);
-      router.push("/dashboard");
-    }
-  }, [setToken, router]);
 
   const {
     register,
@@ -78,19 +68,6 @@ export default function SignupPage() {
           },
           onSuccess: (ctx) => {
             setIsLoading(false);
-            if (ctx.data.token) {
-              localStorage.setItem("acapxp_auth_token", ctx.data.token);
-              setToken(ctx.data.token);
-            }
-
-            if (ctx.data.user) {
-              localStorage.setItem(
-                "acapxp_user",
-                JSON.stringify(ctx.data.user)
-              );
-              setUser(ctx.data.user);
-            }
-
             router.push("/dashboard");
           },
           onError: (ctx) => {

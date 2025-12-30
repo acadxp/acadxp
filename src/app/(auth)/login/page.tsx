@@ -9,7 +9,7 @@ import Image from "next/image";
 import { z } from "zod";
 
 import { getErrorMessage } from "@/lib/utils";
-import { authClient } from "@/lib/auth-client";
+import { authClient, useSession } from "@/lib/auth-client";
 import useAuthStore from "@/store/AuthStore";
 
 const loginSchema = z.object({
@@ -23,16 +23,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { setUser, setToken } = useAuthStore();
-
-  // Restore auth state from localStorage on mount
-  useEffect(() => {
-    const token = localStorage.getItem("auth_token");
-    if (token) {
-      setToken(token);
-      router.push("/dashboard");
-    }
-  }, [setToken, router]);
+  const sessionData = authClient.useSession();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,23 +40,16 @@ export default function LoginPage() {
         email,
         password,
       });
+      sessionData.refetch();
 
-      // Store token and user info in localStorage and Zustand
-      if (data?.token) {
-        localStorage.setItem("acapxp_auth_token", data.token);
-        setToken(data.token);
-      }
-
-      if (data?.user) {
-        localStorage.setItem("acapxp_user", JSON.stringify(data.user));
-        setUser(data.user);
-      }
+      console.log("Session after login:", sessionData);
 
       if (error) {
         throw new Error(error.message);
       }
 
-      router.push("/dashboard");
+      console.log("Login successful:");
+      router.push("/me");
 
       setErrorMessage(null);
     } catch (error: unknown) {
