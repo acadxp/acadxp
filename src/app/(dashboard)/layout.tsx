@@ -1,5 +1,5 @@
 "use client";
-import Header from "@/components/layout/Header";
+import DashboardHeader from "@/components/layout/DashboardHeader";
 import Footer from "@/components/layout/Footer";
 import DashboardSkeleton from "@/components/layout/DashboardSkeleton";
 import { useRouter } from "next/navigation";
@@ -36,9 +36,9 @@ export default function DashboardLayout({
 
       // Try to refresh the token (uses httpOnly cookie)
       try {
-        const response = await refreshToken();
-        setAccessToken(response.accessToken);
-        setUser(response.user);
+        const { data } = await refreshToken();
+        setAccessToken(data.accessToken);
+        setUser(data.user);
         setAuthError(null);
         setIsInitialized(true);
       } catch (err) {
@@ -60,8 +60,8 @@ export default function DashboardLayout({
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-900">
-      <Header />
-      <main className="flex-1 p-8">{children}</main>
+      <DashboardHeader />
+      <main className="flex-1">{children}</main>
       <Footer />
     </div>
   );
