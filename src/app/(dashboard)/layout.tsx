@@ -1,9 +1,11 @@
 "use client";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import DashboardSkeleton from "@/components/layout/DashboardSkeleton";
 import { useRouter } from "next/navigation";
 import useAuthStore from "@/store/AuthStore";
-import { useEffect } from "react";
+import { refreshToken } from "@/lib/api";
+import { useEffect, useState } from "react";
 
 export default function DashboardLayout({
   children,
@@ -11,16 +13,51 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  // const { user, token } = useAuthStore();
-  // const isLoggedIn = !!user && !!token;
+  const [isInitialized, setIsInitialized] = useState(false);
+  const {
+    accessToken,
+    setAccessToken,
+    user,
+    setUser,
+    setAuthError,
+    setLoading,
+  } = useAuthStore();
 
-  // useEffect(() => {
-  //   if (!isLoggedIn) {
-  //     router.push("/login");
-  //   }
-  // }, [isLoggedIn, router]);
+  useEffect(() => {
+    const initializeAuth = async () => {
+      setLoading(true);
 
-  // if (!isLoggedIn) return null;
+      // If we already have a valid token, no need to refresh
+      if (accessToken && user) {
+        setLoading(false);
+        setIsInitialized(true);
+        return;
+      }
+
+      // Try to refresh the token (uses httpOnly cookie)
+      try {
+        const response = await refreshToken();
+        setAccessToken(response.accessToken);
+        setUser(response.user);
+        setAuthError(null);
+        setIsInitialized(true);
+      } catch (err) {
+        // Refresh failed - no valid session, redirect to login
+        setAuthError("Session expired. Please log in again.");
+        router.replace("/login");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
+  }, []); // Only run once on mount
+
+  // Show skeleton while initializing auth
+  if (!isInitialized) {
+    return <DashboardSkeleton />;
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-900">
       <Header />
