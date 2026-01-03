@@ -1,5 +1,3 @@
-import type { Session } from "better-auth/types";
-
 export interface RegisterUserPayload {
   name: string;
   email: string;
@@ -10,13 +8,30 @@ export interface LoginUserPayload {
   email: string;
   password: string;
 }
+export enum UserRole {
+  STUDENT,
+  TEACHER,
+  ADMIN,
+}
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  isActive: boolean;
+  role: UserRole;
+  emailVerified: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 
-// flex on the right state later
 export interface AuthState {
-  session: Session | null;
+  user: User | null;
+  accessToken: string | null;
   error: string | null;
   loading: boolean;
-  setSession: (session: Session) => void;
-  setError: (error: string) => void;
+  setUser: (user: User | null) => void;
+  setAccessToken: (token: string | null) => void;
+  setAuthError: (error: string | null) => void;
+  setLoading: (loading: boolean) => void;
   logout: () => void;
 }

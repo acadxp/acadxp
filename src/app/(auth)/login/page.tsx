@@ -1,15 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
 import { z } from "zod";
-
-import { getErrorMessage } from "@/lib/utils";
-import { authClient, useSession } from "@/lib/auth-client";
+import { loginUser } from "@/lib/api";
 import useAuthStore from "@/store/AuthStore";
 
 const loginSchema = z.object({
@@ -21,44 +19,32 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const sessionData = authClient.useSession();
+  const { setUser, setAccessToken, loading, setLoading, error, setAuthError } =
+    useAuthStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const result = loginSchema.safeParse({ email, password });
 
     if (!result.success) {
-      setErrorMessage("Please enter a valid email and password.");
+      setAuthError("Please enter a valid email and password.");
       return;
     }
 
-    setIsLoading(true);
+    setLoading(true);
     try {
-      const { data, error } = await authClient.signIn.email({
-        email,
-        password,
-      });
-      sessionData.refetch();
+      const { data } = await loginUser({ email, password });
 
-      console.log("Session after login:", sessionData);
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      console.log("Login successful:");
-      router.push("/me");
-
-      setErrorMessage(null);
-    } catch (error: unknown) {
-      setErrorMessage(
-        getErrorMessage(error) ||
-          "Login failed. Please check your credentials and try again."
+      setAuthError(null);
+      setUser(data.user);
+      setAccessToken(data.accessToken);
+      router.push("/dashboard");
+    } catch (error: any) {
+      setAuthError(
+        error.response?.data?.message || "An error occurred during login."
       );
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -120,13 +106,13 @@ export default function LoginPage() {
             <Button
               type="submit"
               className="w-full py-6 text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500"
-              disabled={isLoading}
+              disabled={loading}
             >
-              {isLoading ? "Logging in..." : "Login"}
+              {loading ? "Logging in..." : "Login"}
             </Button>
 
-            {errorMessage && (
-              <p className="text-center text-sm text-red-500">{errorMessage}</p>
+            {error && (
+              <p className="text-center text-sm text-red-500">{error}</p>
             )}
 
             <p className="text-center text-sm text-purple-300">

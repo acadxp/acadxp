@@ -1,24 +1,18 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import type { AuthState } from "../types/user";
-import type { Session } from "better-auth/types";
+import type { AuthState, User } from "../types/user";
 
-const useAuthStore = create<AuthState>()(
-  persist(
-    (set) => ({
-      session: null,
-      error: null,
-      loading: false,
-      setSession: (session: Session) => set({ session }),
-      setError: (error: string) => set({ error }),
-      logout: () => {
-        localStorage.removeItem("acaxp_auth_token");
-        set({ session: null });
-      },
-    }),
-    {
-      name: "auth-storage",
-    }
-  )
-);
+const useAuthStore = create<AuthState>()((set) => ({
+  user: null,
+  accessToken: null,
+  error: null,
+  loading: false,
+  setUser: (user: User | null) => set({ user }),
+  setAccessToken: (token: string | null) => set({ accessToken: token }),
+  setAuthError: (error: string | null) => set({ error }),
+  setLoading: (loading: boolean) => set({ loading }),
+  logout: () => {
+    set({ user: null, accessToken: null, error: null });
+  },
+}));
+
 export default useAuthStore;
