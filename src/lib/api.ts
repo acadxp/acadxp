@@ -22,6 +22,11 @@ export const registerUser = async (payload: RegisterUserPayload) => {
   return response.data;
 };
 
+export const logoutUser = async () => {
+  const response = await api.post("/v1/auth/logout");
+  return response.data;
+};
+
 export const checkEmailAvailability = async (email: string) => {
   const response = await api.get(`/v1/auth/check-email?email=${email}`);
 

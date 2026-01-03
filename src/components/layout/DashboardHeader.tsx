@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import useAuthStore from "@/store/AuthStore";
@@ -18,6 +19,7 @@ import {
   Menu,
   X,
 } from "lucide-react";
+import { logoutUser } from "@/lib/api";
 
 const navLinks = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -33,6 +35,7 @@ const userLinks = [
 
 export default function DashboardHeader() {
   const pathname = usePathname();
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const { user } = useAuthStore();
@@ -137,7 +140,8 @@ export default function DashboardHeader() {
                       <button
                         onClick={() => {
                           setUserMenuOpen(false);
-                          // TODO: Add logout functionality
+                          logoutUser();
+                          router.push("/login");
                         }}
                         className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 w-full transition-colors"
                       >
@@ -228,7 +232,8 @@ export default function DashboardHeader() {
             <button
               onClick={() => {
                 setMobileMenuOpen(false);
-                // TODO: Add logout functionality
+                logoutUser();
+                router.push("/login");
               }}
               className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/10 w-full transition-colors"
             >
