@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -11,9 +11,10 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { checkEmailAvailability } from "@/lib/api";
+import { registerUser } from "@/lib/api";
 import type { RegisterUserPayload } from "../../../types/user";
 import useAuthStore from "@/store/AuthStore";
-import { authClient } from "@/lib/auth-client";
+import { AxiosError } from "axios";
 
 const schema = z
   .object({
@@ -32,17 +33,8 @@ type FormValues = z.infer<typeof schema>;
 export default function SignupPage() {
   const router = useRouter();
   const [step, setStep] = useState(0);
-  const [apiError, setApiError] = useState<null | { message: string }>(null);
-  const { setUser, setToken } = useAuthStore();
-
-  // Restore auth state from localStorage on mount
-  useEffect(() => {
-    const token = localStorage.getItem("auth_token");
-    if (token) {
-      setToken(token);
-      router.push("/dashboard");
-    }
-  }, [setToken, router]);
+  const { setUser, setAccessToken, error, setAuthError, loading, setLoading } =
+    useAuthStore();
 
   const {
     register,
@@ -64,42 +56,20 @@ export default function SignupPage() {
   });
   // Loading flags for async field checks
   const [checkingEmail, setCheckingEmail] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   const signupMutation = useMutation({
     mutationFn: async (payload: RegisterUserPayload) => {
-      const { data, error } = await authClient.signUp.email(
-        {
-          ...payload,
-        },
-        {
-          onRequest: () => {
-            setIsLoading(true);
-          },
-          onSuccess: (ctx) => {
-            setIsLoading(false);
-            if (ctx.data.token) {
-              localStorage.setItem("acapxp_auth_token", ctx.data.token);
-              setToken(ctx.data.token);
-            }
-
-            if (ctx.data.user) {
-              localStorage.setItem(
-                "acapxp_user",
-                JSON.stringify(ctx.data.user)
-              );
-              setUser(ctx.data.user);
-            }
-
-            router.push("/dashboard");
-          },
-          onError: (ctx) => {
-            setIsLoading(false);
-            if (ctx.error) {
-              setApiError({ message: ctx.error.message });
-            }
-          },
-        }
+      return await registerUser(payload);
+    },
+    onSuccess: (data) => {
+      setAuthError(null);
+      setUser(data.user);
+      setAccessToken(data.accessToken);
+      router.push("/dashboard");
+    },
+    onError: (error: any) => {
+      setAuthError(
+        error.response?.data?.message || "An error occurred during signup."
       );
     },
   });
@@ -119,7 +89,7 @@ export default function SignupPage() {
     const valid = await trigger(field);
     if (!valid) return;
 
-    if (apiError) setApiError(null);
+    if (error) setAuthError(null);
 
     // Email uniqueness check on step 1
     if (step === 1) {
@@ -139,7 +109,9 @@ export default function SignupPage() {
         }
       } catch (err: unknown) {
         const msg =
-          err instanceof Error ? err.message : "Could not verify email.";
+          err instanceof AxiosError
+            ? err.response?.data?.message
+            : "Could not verify email.";
         setError("email", {
           type: "manual",
           message: msg,
@@ -158,8 +130,8 @@ export default function SignupPage() {
     e.preventDefault();
     setStep((s) => Math.max(0, s - 1));
 
-    if (apiError) {
-      setApiError(null);
+    if (error) {
+      setAuthError(null);
     }
   };
 
@@ -327,9 +299,7 @@ export default function SignupPage() {
               </div>
             )}
 
-            {apiError && (
-              <p className="text-sm text-pink-300">{apiError.message}</p>
-            )}
+            {error && <p className="text-sm text-pink-300">{error}</p>}
 
             <div className="flex gap-2">
               {step > 0 && (
@@ -338,7 +308,7 @@ export default function SignupPage() {
                   variant="outline"
                   className="flex-1 py-6 border-purple-500/50 text-purple-200"
                   onClick={handleBack}
-                  disabled={isLoading || checkingEmail}
+                  disabled={loading || checkingEmail}
                 >
                   Back
                 </Button>
@@ -348,7 +318,7 @@ export default function SignupPage() {
                 <Button
                   type="submit"
                   className="flex-1 py-6 text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500"
-                  disabled={isLoading || checkingEmail}
+                  disabled={loading || checkingEmail}
                 >
                   {checkingEmail ? "Checking..." : "Next"}
                 </Button>
@@ -356,9 +326,9 @@ export default function SignupPage() {
                 <Button
                   type="submit"
                   className="flex-1 py-6 text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500"
-                  disabled={isLoading}
+                  disabled={loading}
                 >
-                  {isLoading ? "Creating..." : "Create Account"}
+                  {loading ? "Creating..." : "Create Account"}
                 </Button>
               )}
             </div>

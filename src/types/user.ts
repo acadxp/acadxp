@@ -8,21 +8,30 @@ export interface LoginUserPayload {
   email: string;
   password: string;
 }
-
-export interface UserInfos {
-  id?: string;
-  email?: string;
-  name?: string;
+export enum UserRole {
+  STUDENT,
+  TEACHER,
+  ADMIN,
+}
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  isActive: boolean;
+  role: UserRole;
+  emailVerified: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
-// flex on the right state later
 export interface AuthState {
-  user: UserInfos | null;
-  token: string | null;
+  user: User | null;
+  accessToken: string | null;
   error: string | null;
   loading: boolean;
-  setUser: (user: UserInfos) => void;
-  setToken: (token: string) => void;
-  setError: (error: string) => void;
+  setUser: (user: User | null) => void;
+  setAccessToken: (token: string | null) => void;
+  setAuthError: (error: string | null) => void;
+  setLoading: (loading: boolean) => void;
   logout: () => void;
 }

@@ -1,19 +1,43 @@
+import type { RegisterUserPayload, LoginUserPayload } from "../types/user";
+
 import axios from "axios";
 
 const api = axios.create({
-  // baseURL: "http://localhost:8000/api",
+  // baseURL: "http://localhost:8001/api",
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true,
 });
 
+export const loginUser = async (payload: LoginUserPayload) => {
+  const response = await api.post("/v1/auth/login", payload);
+
+  return response.data;
+};
+
+export const registerUser = async (payload: RegisterUserPayload) => {
+  const response = await api.post("/v1/auth/register", payload);
+  return response.data;
+};
+
+export const logoutUser = async () => {
+  const response = await api.post("/v1/auth/logout");
+  return response.data;
+};
+
 export const checkEmailAvailability = async (email: string) => {
-  const response = await api.get(`/v1/users/check-email?email=${email}`);
+  const response = await api.get(`/v1/auth/check-email?email=${email}`);
 
   const isAvailable =
     response.data.message === "Email is available" ? true : false;
   return isAvailable;
+};
+
+export const refreshToken = async () => {
+  const response = await api.post("/v1/auth/refresh-token");
+  return response.data;
 };
 
 export const checkUsernameAvailability = async (username: string) => {
@@ -24,4 +48,14 @@ export const checkUsernameAvailability = async (username: string) => {
   const isAvailable =
     response.data.message === "Username is available" ? true : false;
   return isAvailable;
+};
+
+export const getMe = async (userId: string, token: string) => {
+  const response = await api.get(`/v1/users/profile?userId=${userId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return response.data;
 };
