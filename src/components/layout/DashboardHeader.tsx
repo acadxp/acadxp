@@ -23,6 +23,7 @@ import {
 import { logoutUser } from "@/lib/api";
 import NotificationModal, { Notification } from "./NotificationModal";
 import NotificationDropdown from "./NotificationDropdown";
+import MobileMenu from "./MobileMenu";
 
 // Sample notifications data
 const sampleNotifications: Notification[] = [
@@ -289,77 +290,7 @@ export default function DashboardHeader() {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-violet-500/20 bg-black/95 backdrop-blur-xl">
-            {/* User Info */}
-            <div className="px-4 py-4 border-b border-violet-500/20 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white font-semibold">
-                {user?.name?.charAt(0)?.toUpperCase() || "U"}
-              </div>
-              <div>
-                <p className="text-sm font-medium text-white">
-                  {user?.name || "User"}
-                </p>
-                <p className="text-xs text-zinc-500">
-                  {user?.email || "user@example.com"}
-                </p>
-              </div>
-              <div className="ml-auto flex items-center gap-2 px-3 py-1.5 rounded-full bg-violet-600/20 border border-violet-500/30">
-                <Zap className="w-4 h-4 text-fuchsia-400" />
-                <span className="text-sm font-semibold text-violet-300">
-                  0 XP
-                </span>
-              </div>
-            </div>
-
-            {/* Navigation Links */}
-            <nav className="px-2 py-3 space-y-1">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300 ${
-                    isActive(link.href)
-                      ? "bg-violet-600/20 text-white border border-violet-500/30"
-                      : "text-zinc-400 hover:text-white hover:bg-violet-600/10"
-                  }`}
-                >
-                  <link.icon className="w-5 h-5" />
-                  {link.label}
-                </Link>
-              ))}
-            </nav>
-
-            {/* User Links */}
-            <div className="px-2 py-3 border-t border-violet-500/20 space-y-1">
-              {userLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300 ${
-                    isActive(link.href)
-                      ? "bg-violet-600/20 text-white border border-violet-500/30"
-                      : "text-zinc-400 hover:text-white hover:bg-violet-600/10"
-                  }`}
-                >
-                  <link.icon className="w-5 h-5" />
-                  {link.label}
-                </Link>
-              ))}
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  logoutUser();
-                  router.push("/login");
-                }}
-                className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/10 w-full transition-colors"
-              >
-                <LogOut className="w-5 h-5" />
-                Log out
-              </button>
-            </div>
-          </div>
+          <MobileMenu user={user} onClose={() => setMobileMenuOpen(false)} />
         )}
 
         {/* Mobile Notifications Dropdown */}
