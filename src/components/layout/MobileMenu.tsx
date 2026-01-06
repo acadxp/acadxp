@@ -60,7 +60,7 @@ export default function MobileMenu({ user, onClose }: MobileMenuProps) {
     <div className="md:hidden border-t border-violet-500/20 bg-black/95 backdrop-blur-xl">
       {/* User Info */}
       <div className="px-4 py-4 border-b border-violet-500/20 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white font-semibold">
+        <div className="w-10 h-10 rounded-full bg-violet-600 flex items-center justify-center text-white font-semibold">
           {user?.name?.charAt(0)?.toUpperCase() || "U"}
         </div>
         <div>
@@ -82,8 +82,8 @@ export default function MobileMenu({ user, onClose }: MobileMenuProps) {
             onClick={onClose}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300 ${
               isActive(link.href)
-                ? "bg-violet-600/20 text-white border border-violet-500/30"
-                : "text-zinc-400 hover:text-white hover:bg-violet-600/10"
+                ? "bg-violet-600/20 text-white border border-violet-500/30 shadow-[0_0_15px_rgba(139,92,246,0.3)]"
+                : "text-zinc-400 active:text-white active:bg-violet-600/10 active:shadow-[0_0_20px_rgba(139,92,246,0.4)]"
             }`}
           >
             <link.icon className="w-5 h-5" />
@@ -101,8 +101,8 @@ export default function MobileMenu({ user, onClose }: MobileMenuProps) {
             onClick={onClose}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300 ${
               isActive(link.href)
-                ? "bg-violet-600/20 text-white border border-violet-500/30"
-                : "text-zinc-400 hover:text-white hover:bg-violet-600/10"
+                ? "bg-violet-600/20 text-white border border-violet-500/30 shadow-[0_0_15px_rgba(139,92,246,0.3)]"
+                : "text-zinc-400 active:text-white active:bg-violet-600/10 active:shadow-[0_0_20px_rgba(139,92,246,0.4)]"
             }`}
           >
             <link.icon className="w-5 h-5" />

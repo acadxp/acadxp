@@ -53,7 +53,7 @@ export default function XPProgressBar({
         >
           {/* Level Badge */}
           <div className="flex items-center gap-1.5">
-            <div className="relative flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 shadow-lg shadow-violet-500/30">
+            <div className="relative flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-violet-600 shadow-lg shadow-violet-500/30">
               <span className="text-[10px] sm:text-xs font-bold text-white">
                 {data.level}
               </span>
@@ -109,8 +109,8 @@ function ExpandedXPView({ data }: { data: XPData }) {
         <div className="flex items-center gap-2">
           {/* Animated Level Badge */}
           <div className="relative">
-            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 blur-md opacity-60 animate-pulse" />
-            <div className="relative flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-violet-500 via-fuchsia-500 to-violet-600 shadow-lg">
+            <div className="absolute inset-0 rounded-full bg-violet-500 blur-md opacity-60 animate-pulse" />
+            <div className="relative flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-violet-600 shadow-lg">
               <Star className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-300 absolute -top-1 -right-1 animate-bounce" />
               <span className="text-sm sm:text-lg font-bold text-white">
                 {data.level}
@@ -164,7 +164,7 @@ function ExpandedXPView({ data }: { data: XPData }) {
 
           {/* Progress Fill */}
           <div
-            className="absolute inset-y-0 left-0 bg-gradient-to-r from-violet-600 via-fuchsia-500 to-violet-400 transition-all duration-500 ease-out"
+            className="absolute inset-y-0 left-0 bg-violet-600 transition-all duration-500 ease-out"
             style={{ width: `${data.progress}%` }}
           >
             {/* Shine Effect */}

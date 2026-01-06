@@ -6,7 +6,7 @@ export default function DashboardPage() {
           <span className="text-5xl">🚧</span>
         </div>
 
-        <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+        <h1 className="text-4xl md:text-5xl font-bold mb-4 text-white">
           Under Construction
         </h1>
 

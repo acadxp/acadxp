@@ -140,8 +140,8 @@ export default function DashboardHeader() {
                   href={link.href}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-2 ${
                     isActive(link.href)
-                      ? "bg-violet-600/20 text-white border border-violet-500/30"
-                      : "text-zinc-400 hover:text-white hover:bg-violet-600/10"
+                      ? "bg-violet-600/20 text-white border border-violet-500/30 shadow-[0_0_15px_rgba(139,92,246,0.3)]"
+                      : "text-zinc-400 hover:text-white hover:bg-violet-600/10 hover:shadow-[0_0_20px_rgba(139,92,246,0.4)]"
                   }`}
                 >
                   <link.icon className="w-4 h-4" />
@@ -192,7 +192,7 @@ export default function DashboardHeader() {
                   }}
                   className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-violet-600/10 transition-all duration-300 cursor-pointer"
                 >
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white font-semibold text-sm">
+                  <div className="w-8 h-8 rounded-full bg-violet-600 flex items-center justify-center text-white font-semibold text-sm">
                     {user?.name?.charAt(0)?.toUpperCase() || "U"}
                   </div>
                   <span className="text-sm text-zinc-400 hidden lg:block">
