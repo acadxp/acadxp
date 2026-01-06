@@ -14,45 +14,13 @@ export default function StartPage() {
   };
 
   return (
-    <div className="min-h-screen w-full relative overflow-hidden bg-gradient-to-b from-gray-900 via-purple-900 to-black flex items-center justify-center">
-      {/* Pixel art background effects */}
-      {/* <div className="absolute inset-0 opacity-30">
-        <div
-          className="absolute top-10 left-10 w-16 h-16 bg-purple-500 animate-float"
-          style={{ clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)" }}
-        />
-        <div
-          className="absolute top-20 right-20 w-12 h-12 bg-cyan-400 animate-float-delayed"
-          style={{
-            clipPath:
-              "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
-          }}
-        />
-        <div
-          className="absolute bottom-20 left-1/4 w-20 h-20 bg-fuchsia-500 animate-float-slow"
-          style={{
-            clipPath:
-              "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)",
-          }}
-        />
-        <div
-          className="absolute bottom-32 right-1/3 w-14 h-14 bg-yellow-400 animate-float"
-          style={{
-            clipPath:
-              "polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)",
-          }}
-        />
-      </div> */}
-
-      {/* Animated grid background */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-10" />
-
+    <div className="w-full relative overflow-hidden flex items-center justify-center p-4">
       {/* Glowing particles */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 pointer-events-none">
         {[...Array(20)].map((_, i) => (
           <div
             key={i}
-            className="absolute w-1 h-1 bg-purple-400 rounded-full animate-particle"
+            className="absolute w-1 h-1 bg-violet-400 rounded-full animate-particle"
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
@@ -64,17 +32,17 @@ export default function StartPage() {
       </div>
 
       {/* Main content */}
-      <div className="relative z-10 flex flex-col items-center justify-center  space-y-12 px-4 py-8">
+      <div className="relative z-10 flex flex-col items-center justify-center space-y-12 px-4 py-8">
         {/* Logo with glow effect */}
         <div className="relative">
-          <div className="absolute inset-0 bg-purple-500 blur-3xl opacity-50 animate-pulse" />
+          <div className="absolute inset-0 bg-violet-500 blur-3xl opacity-50 animate-pulse" />
           <Link href="/">
             <Image
               src="/assets/img/acadxp-logo.png"
               alt="AcadXP Logo"
               width={150}
               height={150}
-              className="relative rounded-3xl shadow-2xl shadow-purple-500/50 pixel-render"
+              className="relative rounded-3xl shadow-2xl shadow-violet-500/50 pixel-render"
             />
           </Link>
         </div>
@@ -82,7 +50,7 @@ export default function StartPage() {
         {!showAuthButtons ? (
           // Initial state: Press Start
           <div className="flex flex-col items-center space-y-8 animate-fade-in">
-            <p className="text-2xl text-purple-300 text-center animate-blink pixel-text">
+            <p className="text-2xl text-violet-300 text-center animate-blink pixel-text">
               PRESS START
             </p>
 
@@ -91,7 +59,7 @@ export default function StartPage() {
               variant="success"
               size="lg"
               onClick={handleStart}
-              className=" text-lg font-bold rounded-xl shadow-lg shadow-purple-500/50 transform hover:scale-105 transition-all duration-200 pixel-border animate-pulse-glow pixel-text"
+              className="text-lg font-bold rounded-xl !shadow-lg !shadow-green-500/50 transform hover:scale-105 hover:!shadow-[0_0_30px_rgba(34,197,94,0.5)] transition-all duration-200 pixel-border animate-pulse-glow pixel-text"
             >
               START
             </Button>
@@ -106,7 +74,7 @@ export default function StartPage() {
               <Link href="/login" className="w-full max-w-xs">
                 <Button
                   variant="primary"
-                  className="w-full text-md font-bold  rounded-xl shadow-lg shadow-cyan-500/50 transform hover:scale-105 transition-all duration-200 pixel-border pixel-text"
+                  className="w-full text-md font-bold rounded-xl !shadow-lg !shadow-blue-500/50 transform hover:scale-105 hover:!shadow-[0_0_25px_rgba(59,130,246,0.5)] transition-all duration-200 pixel-border pixel-text"
                 >
                   Login
                 </Button>
@@ -115,7 +83,7 @@ export default function StartPage() {
               <Link href="/signup" className="w-full max-w-xs">
                 <Button
                   variant="primary"
-                  className="w-full  text-md font-bold  rounded-xl shadow-lg shadow-purple-500/50 transform hover:scale-105 transition-all duration-200 pixel-border pixel-text"
+                  className="w-full text-md font-bold rounded-xl !shadow-lg !shadow-blue-500/50 transform hover:scale-105 hover:!shadow-[0_0_25px_rgba(59,130,246,0.5)] transition-all duration-200 pixel-border pixel-text"
                 >
                   Signup
                 </Button>
@@ -124,27 +92,27 @@ export default function StartPage() {
 
             <button
               onClick={() => setShowAuthButtons(false)}
-              className="mt-6 flex items-center hover:pointer-cursor text-purple-300 hover:text-white transition-colors pixel-text text-sm"
+              className="mt-6 flex items-center cursor-pointer text-zinc-400 hover:text-violet-400 transition-colors pixel-text text-sm"
             >
               <ChevronsLeft className="inline-block mr-1" />
               Back
             </button>
           </div>
         )}
-
-        {/* Retro credits */}
-        <p className="text-white/50 text-sm mt-20 text-center pixel-text ">
-          © {new Date().getFullYear()}{" "}
-          <a
-            href="https://dripcodestudio.com/"
-            target="_blank"
-            className="underline"
-          >
-            DripCode Studio
-          </a>
-          . All rights reserved.
-        </p>
       </div>
+
+      {/* Retro credits */}
+      <p className="text-zinc-500 text-sm text-center pixel-text fixed bottom-4 left-0 right-0 z-10">
+        © {new Date().getFullYear()}{" "}
+        <a
+          href="https://dripcodestudio.com/"
+          target="_blank"
+          className="underline hover:text-violet-400 transition-colors"
+        >
+          DripCode Studio
+        </a>
+        . All rights reserved.
+      </p>
     </div>
   );
 }

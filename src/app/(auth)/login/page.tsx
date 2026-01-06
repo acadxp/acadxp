@@ -49,8 +49,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-gray-900 via-purple-900 to-black flex items-center justify-center p-4">
-      <Card className="w-full max-w-md bg-gray-900/50 border-purple-500/30 backdrop-blur-xl">
+    <div className="w-full flex items-center justify-center p-4">
+      <Card className="w-full max-w-md bg-black/80 border-violet-500/30 backdrop-blur-xl">
         <CardHeader className="space-y-4">
           <div className="flex justify-center">
             <Image
@@ -61,7 +61,7 @@ export default function LoginPage() {
               className="rounded-2xl"
             />
           </div>
-          <CardTitle className="text-3xl font-bold text-center bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+          <CardTitle className="text-3xl font-bold text-center text-white">
             Welcome Back
           </CardTitle>
         </CardHeader>
@@ -70,7 +70,7 @@ export default function LoginPage() {
             <div className="space-y-2">
               <label
                 htmlFor="email"
-                className="text-sm font-medium text-purple-200"
+                className="text-sm font-medium text-violet-300"
               >
                 Email
               </label>
@@ -79,7 +79,7 @@ export default function LoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg bg-gray-800/50 border border-purple-500/30 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full px-4 py-3 rounded-lg bg-zinc-900/50 border border-violet-500/30 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all"
                 placeholder="your@email.com"
                 required
               />
@@ -88,7 +88,7 @@ export default function LoginPage() {
             <div className="space-y-2">
               <label
                 htmlFor="password"
-                className="text-sm font-medium text-purple-200"
+                className="text-sm font-medium text-violet-300"
               >
                 Password
               </label>
@@ -97,7 +97,7 @@ export default function LoginPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg bg-gray-800/50 border border-purple-500/30 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full px-4 py-3 rounded-lg bg-zinc-900/50 border border-violet-500/30 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all"
                 placeholder="••••••••"
                 required
               />
@@ -105,21 +105,21 @@ export default function LoginPage() {
 
             <Button
               type="submit"
-              className="w-full py-6 text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500"
+              className="w-full py-6 text-lg font-bold bg-violet-600 hover:bg-violet-500 hover:shadow-[0_0_20px_rgba(139,92,246,0.4)] transition-all duration-300"
               disabled={loading}
             >
               {loading ? "Logging in..." : "Login"}
             </Button>
 
             {error && (
-              <p className="text-center text-sm text-red-500">{error}</p>
+              <p className="text-center text-sm text-red-400">{error}</p>
             )}
 
-            <p className="text-center text-sm text-purple-300">
+            <p className="text-center text-sm text-zinc-400">
               Do not have an account?{" "}
               <Link
                 href="/signup"
-                className="text-pink-400 hover:text-pink-300 font-semibold"
+                className="text-violet-400 hover:text-violet-300 font-semibold transition-colors"
               >
                 Sign up
               </Link>
@@ -127,7 +127,7 @@ export default function LoginPage() {
 
             <Link
               href="/start"
-              className="block text-center text-sm text-purple-400 hover:text-purple-300"
+              className="block text-center text-sm text-zinc-500 hover:text-violet-400 transition-colors"
             >
               ← Back to start
             </Link>
