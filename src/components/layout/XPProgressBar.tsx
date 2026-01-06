@@ -49,7 +49,7 @@ export default function XPProgressBar({
         {/* Compact Badge - Clickable */}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-2 px-2 sm:px-3 py-1.5 rounded-full bg-violet-600/20 border border-violet-500/30 hover:border-violet-500/50 transition-all duration-300"
+          className="flex items-center gap-2 px-2 sm:px-3 py-1.5 rounded-full bg-violet-600/20 border border-violet-500/30 hover:border-violet-500/50 transition-all duration-300 cursor-pointer"
         >
           {/* Level Badge */}
           <div className="flex items-center gap-1.5">

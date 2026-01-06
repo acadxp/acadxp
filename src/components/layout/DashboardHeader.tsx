@@ -162,7 +162,7 @@ export default function DashboardHeader() {
                     setNotificationsOpen(!notificationsOpen);
                     setUserMenuOpen(false);
                   }}
-                  className="relative p-2 rounded-lg hover:bg-violet-600/10 transition-all duration-300"
+                  className="relative p-2 rounded-lg hover:bg-violet-600/10 transition-all duration-300 cursor-pointer"
                 >
                   <Bell className="w-5 h-5 text-zinc-400 hover:text-white" />
                   {unreadCount > 0 && (
@@ -190,7 +190,7 @@ export default function DashboardHeader() {
                     setUserMenuOpen(!userMenuOpen);
                     setNotificationsOpen(false);
                   }}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-violet-600/10 transition-all duration-300"
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-violet-600/10 transition-all duration-300 cursor-pointer"
                 >
                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white font-semibold text-sm">
                     {user?.name?.charAt(0)?.toUpperCase() || "U"}
@@ -268,7 +268,7 @@ export default function DashboardHeader() {
                   setNotificationsOpen(!notificationsOpen);
                   setMobileMenuOpen(false);
                 }}
-                className="relative p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-violet-600/10 transition-all duration-300"
+                className="relative p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-violet-600/10 transition-all duration-300 cursor-pointer"
               >
                 <Bell className="w-5 h-5" />
                 {unreadCount > 0 && (
