@@ -11,9 +11,18 @@ import {
   User,
   Settings,
   LogOut,
-  Zap,
 } from "lucide-react";
 import { logoutUser } from "@/lib/api";
+import XPProgressBar, { XPData } from "./XPProgressBar";
+
+// Default XP data (will come from backend/user state)
+const defaultXPData: XPData = {
+  currentXP: 0,
+  level: 1,
+  xpInCurrentLevel: 0,
+  xpNeededForNextLevel: 100,
+  progress: 0,
+};
 
 const navLinks = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -61,10 +70,6 @@ export default function MobileMenu({ user, onClose }: MobileMenuProps) {
           <p className="text-xs text-zinc-500">
             {user?.email || "user@example.com"}
           </p>
-        </div>
-        <div className="ml-auto flex items-center gap-2 px-3 py-1.5 rounded-full bg-violet-600/20 border border-violet-500/30">
-          <Zap className="w-4 h-4 text-fuchsia-400" />
-          <span className="text-sm font-semibold text-violet-300">0 XP</span>
         </div>
       </div>
 

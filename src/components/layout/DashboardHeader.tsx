@@ -14,7 +14,6 @@ import {
   User,
   Settings,
   LogOut,
-  Zap,
   ChevronDown,
   Menu,
   X,
@@ -24,6 +23,16 @@ import { logoutUser } from "@/lib/api";
 import NotificationModal, { Notification } from "./NotificationModal";
 import NotificationDropdown from "./NotificationDropdown";
 import MobileMenu from "./MobileMenu";
+import XPProgressBar, { XPData } from "./XPProgressBar";
+
+// Default XP data (will come from backend/user state)
+const defaultXPData: XPData = {
+  currentXP: 0,
+  level: 1,
+  xpInCurrentLevel: 0,
+  xpNeededForNextLevel: 100,
+  progress: 0,
+};
 
 // Sample notifications data
 const sampleNotifications: Notification[] = [
@@ -143,13 +152,8 @@ export default function DashboardHeader() {
 
             {/* Desktop User Menu */}
             <div className="hidden md:flex items-center space-x-4">
-              {/* XP Badge */}
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-violet-600/20 border border-violet-500/30">
-                <Zap className="w-4 h-4 text-fuchsia-400" />
-                <span className="text-sm font-semibold text-violet-300">
-                  0 XP
-                </span>
-              </div>
+              {/* XP Progress */}
+              <XPProgressBar data={defaultXPData} compact />
 
               {/* Notifications */}
               <div className="relative">
@@ -255,6 +259,9 @@ export default function DashboardHeader() {
 
             {/* Mobile Menu Button */}
             <div className="md:hidden flex items-center gap-2">
+              {/* Mobile XP Progress */}
+              <XPProgressBar data={defaultXPData} compact />
+
               {/* Mobile Notifications */}
               <button
                 onClick={() => {
