@@ -22,8 +22,12 @@
 }
 
 @layer base {
-  body {
-    @apply font-sans bg-bg-secondary text-text-primary antialiased;
+  .text-editorial {
+    letter-spacing: -0.02em;
+  }
+
+  .technical-margin {
+    @apply select-none font-extrabold tracking-tighter leading-none text-text-primary/5;
   }
 
   .hero-section {
