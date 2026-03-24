@@ -1,17 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  ArrowRight,
-  LogIn,
-  UserPlus,
-  School,
-  Terminal,
-  Chrome,
-} from "lucide-react";
-import { Button } from "@acadxp/xpui";
+import { ArrowRight, LogIn, UserPlus } from "lucide-react";
 
 export default function StartPage() {
   return (
