@@ -2,10 +2,43 @@
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import Footer from "@/components/layout/Footer";
 import DashboardSkeleton from "@/components/layout/DashboardSkeleton";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
+import Link from "next/link";
+import { navItems } from "@/lib/utils";
 import useAuthStore from "@/store/AuthStore";
 import { refreshToken } from "@/lib/api";
 import { useEffect, useState } from "react";
+
+import { cn } from "@/lib/utils";
+import Sidebar from "@/components/layout/Sidebar";
+
+function MobileNav() {
+  const pathname = usePathname();
+  return (
+    <nav className="lg:hidden fixed bottom-0 left-0 w-full z-50 bg-white border-t border-[#f0efec] flex items-center justify-around px-2 py-2 pb-safe shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+      {navItems.map((item) => {
+        const isActive = pathname === item.href;
+        return (
+          <Link
+            key={item.label}
+            href={item.href}
+            className={cn(
+              "flex flex-col items-center justify-center w-16 h-14 rounded-xl transition-all",
+              isActive
+                ? "text-[#4F46E5]"
+                : "text-[#a8a7a2] hover:text-[#6b6a65] hover:bg-[#f7f7f6]",
+            )}
+          >
+            <item.icon className="w-5 h-5 mb-1" />
+            <span className="text-[10px] font-bold tracking-tight">
+              {item.label}
+            </span>
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
 
 export default function DashboardLayout({
   children,
@@ -51,7 +84,7 @@ export default function DashboardLayout({
     };
 
     initializeAuth();
-  }, []); // Only run once on mount
+  }, []);
 
   // Show skeleton while initializing auth
   if (!isInitialized) {
@@ -59,60 +92,12 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-black relative overflow-hidden">
-      {/* Background Pattern & Effects */}
-      <div className="fixed inset-0 z-0">
-        {/* Base gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-black via-zinc-950 to-black" />
-
-        {/* Grid pattern */}
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: `linear-gradient(rgba(139, 92, 246, 0.5) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(139, 92, 246, 0.5) 1px, transparent 1px)`,
-            backgroundSize: "60px 60px",
-          }}
-        />
-
-        {/* Radial glow - top left */}
-        <div className="absolute -top-40 -left-40 w-96 h-96 bg-violet-600/20 rounded-full blur-[120px]" />
-
-        {/* Radial glow - bottom right */}
-        <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-fuchsia-600/20 rounded-full blur-[120px]" />
-
-        {/* Radial glow - center */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-violet-500/5 rounded-full blur-[150px]" />
-
-        {/* Noise texture overlay */}
-        <div
-          className="absolute inset-0 opacity-[0.015]"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-          }}
-        />
-
-        {/* Diagonal lines pattern */}
-        <div
-          className="absolute inset-0 opacity-[0.02]"
-          style={{
-            backgroundImage: `repeating-linear-gradient(
-              45deg,
-              transparent,
-              transparent 10px,
-              rgba(217, 70, 239, 0.3) 10px,
-              rgba(217, 70, 239, 0.3) 11px
-            )`,
-          }}
-        />
+    <div className="flex bg-white min-h-screen">
+      <Sidebar />
+      <div className="flex-1 lg:ml-64 bg-white relative pb-20 lg:pb-0 min-w-0 flex flex-col">
+        {children}
       </div>
-
-      {/* Content */}
-      <div className="relative z-10 flex flex-col min-h-screen">
-        <DashboardHeader />
-        <main className="flex-1">{children}</main>
-        <Footer />
-      </div>
+      <MobileNav />
     </div>
   );
 }
