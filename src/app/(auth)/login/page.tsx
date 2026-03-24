@@ -9,14 +9,6 @@ import Image from "next/image";
 import { z } from "zod";
 import { loginUser } from "@/lib/api";
 import useAuthStore from "@/store/AuthStore";
-import {
-  ArrowRight,
-  LogIn,
-  UserPlus,
-  School,
-  Terminal,
-  Chrome,
-} from "lucide-react";
 
 const loginSchema = z.object({
   email: z.email("Invalid email address"),
