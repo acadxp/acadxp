@@ -44,7 +44,7 @@ export default function DashboardLayout({
       } catch (err) {
         // Refresh failed - no valid session, redirect to login
         setAuthError("Session expired. Please log in again.");
-        router.replace("/login");
+        router.replace("/start");
       } finally {
         setLoading(false);
       }
