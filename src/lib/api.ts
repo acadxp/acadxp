@@ -3,8 +3,8 @@ import type { RegisterUserPayload, LoginUserPayload } from "../types/user";
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:8001/api",
-  // baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
+  // baseURL: "http://localhost:8001/api",
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },

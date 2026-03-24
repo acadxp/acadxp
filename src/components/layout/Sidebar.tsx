@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { navItems } from "@/lib/utils";
 import { HelpCircle, LogOut, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -13,9 +14,17 @@ export default function Sidebar() {
   return (
     <aside className="hidden lg:flex h-screen w-64 fixed left-0 top-0 bg-bg-secondary flex-col py-8 px-6 z-50 border-r border-bg-tertiary">
       <div className="mb-10 px-2">
-        <span className="text-2xl font-black tracking-tighter text-primary block">
-          AcadXP
-        </span>
+        <div className="flex flex-col items-center gap-3">
+                  <div className="flex justify-center">
+                    <Image
+                      src="/assets/img/acadxp-logo.png"
+                      alt="AcadXP Logo"
+                      width={80}
+                      height={80}
+                      className="rounded-2xl"
+                    />
+                  </div>
+                </div>
       </div>
 
       <nav className="flex-1 space-y-2">
