@@ -1,15 +1,19 @@
+"use client";
+
+import { Trophy } from "lucide-react";
+
 export default function LeaderboardPage() {
   return (
-    <div className="min-h-[80vh] text-white flex items-center justify-center p-8">
-      <div className="text-center max-w-xl">
-        <h1 className="text-4xl md:text-5xl font-bold mb-4 text-white">
+    <>
+      <div className="min-h-screen text-white p-4 md:p-8">
+        <h1 className="text-3xl font-bold mb-6 flex items-center gap-2">
+          <Trophy size={32} className="text-yellow-400" />
           Leaderboard
         </h1>
-
-        <p className="text-xl text-purple-200/90 mb-2">
-          Compete and climb the ranks! 🥇
+        <p className="text-gray-400 mb-8">
+          See how you stack up against other users in our leaderboard!
         </p>
       </div>
-    </div>
+    </>
   );
 }

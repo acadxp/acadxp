@@ -1,6 +1,17 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-// import { AxiosError } from "axios"; // removed unused import
+import {
+  LayoutDashboard,
+  Trophy,
+  Settings,
+  GraduationCap,
+  Zap,
+  Shield,
+  Target,
+  BarChart2,
+  BarChart3,
+  Bell,
+} from "lucide-react";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -18,3 +29,11 @@ export const getErrorMessage = (error: unknown): string | undefined => {
   }
   return undefined;
 };
+
+export const navItems = [
+  { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
+  { icon: GraduationCap, label: "My Courses", href: "/courses" },
+  { icon: Trophy, label: "Challenges", href: "/challenges" },
+  { icon: Target, label: "Goals", href: "/goals" },
+  { icon: Settings, label: "Settings", href: "/settings" },
+];
