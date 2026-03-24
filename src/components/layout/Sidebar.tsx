@@ -11,22 +11,11 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden lg:flex h-screen w-64 fixed left-0 top-0 bg-[#f7f7f6] flex-col py-8 px-6 z-50 border-r border-[#f0efec]">
+    <aside className="hidden lg:flex h-screen w-64 fixed left-0 top-0 bg-bg-secondary flex-col py-8 px-6 z-50 border-r border-bg-tertiary">
       <div className="mb-10 px-2">
-        <span className="text-2xl font-black tracking-tighter text-[#4F46E5] block">
+        <span className="text-2xl font-black tracking-tighter text-primary block">
           AcadXP
         </span>
-        <div className="mt-8 flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-[#4F46E5] flex items-center justify-center text-white font-bold text-lg shadow-sm">
-            AT
-          </div>
-          <div>
-            <p className="text-sm font-bold text-[#111110]">Alex Tremblay</p>
-            <p className="text-[10px] uppercase tracking-widest text-[#a8a7a2] font-black">
-              Level 42 Architect
-            </p>
-          </div>
-        </div>
       </div>
 
       <nav className="flex-1 space-y-2">
@@ -39,16 +28,16 @@ export default function Sidebar() {
               className={cn(
                 "flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 group",
                 isActive
-                  ? "bg-white text-[#4F46E5] font-bold shadow-sm"
-                  : "text-[#6b6a65] hover:text-[#111110] hover:bg-[#f0efec]",
+                  ? "text-primary font-bold"
+                  : "text-text-secondary font-medium hover:text-primary hover:font-bold",
               )}
             >
               <item.icon
                 className={cn(
-                  "w-5 h-5",
+                  "w-5 h-5 transition-colors",
                   isActive
-                    ? "text-[#4F46E5]"
-                    : "text-[#a8a7a2] group-hover:text-[#6b6a65]",
+                    ? "text-primary"
+                    : "text-text-muted group-hover:text-primary",
                 )}
               />
               <span className="text-sm">{item.label}</span>
@@ -58,21 +47,21 @@ export default function Sidebar() {
       </nav>
 
       <div className="mt-auto space-y-6">
-        <button className="w-full py-3 bg-[#4F46E5] text-white rounded-xl text-sm font-bold hover:bg-opacity-90 transition-all shadow-md flex items-center justify-center gap-2">
+        {/* Footer actions only, no notifications */}
+        <Link href="/goal" className="w-full py-3 bg-primary text-white rounded-xl text-sm font-bold hover:bg-opacity-90 transition-all shadow-md flex items-center justify-center gap-2">
           <Plus className="w-4 h-4" />
-          New Challenge
-        </button>
-
-        <div className="space-y-1 pt-6 border-t border-[#f0efec]">
+          New Goal
+        </Link>
+        <div className="space-y-1 pt-6 border-t border-bg-tertiary">
           <Link
             href="/support"
-            className="flex items-center gap-3 px-4 py-2 text-[#6b6a65] hover:text-[#111110] transition-colors"
+            className="group flex items-center gap-3 px-4 py-2 font-medium text-text-secondary hover:text-primary hover:font-bold transition-all"
           >
-            <HelpCircle className="w-5 h-5 text-[#a8a7a2]" />
+            <HelpCircle className="w-5 h-5 text-text-muted group-hover:text-primary transition-colors" />
             <span className="text-sm">Support</span>
           </Link>
-          <button className="w-full flex items-center gap-3 px-4 py-2 text-[#6b6a65] hover:text-[#111110] transition-colors">
-            <LogOut className="w-5 h-5 text-[#a8a7a2]" />
+          <button className="w-full flex items-center gap-3 px-4 py-2 cursor-pointer text-red-500 hover:text-red-600 hover:font-bold transition-all">
+            <LogOut className="w-5 h-5 text-red-500" />
             <span className="text-sm">Logout</span>
           </button>
         </div>

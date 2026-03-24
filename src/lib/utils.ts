@@ -34,10 +34,6 @@ export const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
   { icon: GraduationCap, label: "My Courses", href: "/courses" },
   { icon: Trophy, label: "Challenges", href: "/challenges" },
-  { icon: Zap, label: "Skills", href: "/skills" },
-  { icon: Shield, label: "Badges", href: "/badges" },
   { icon: Target, label: "Goals", href: "/goals" },
-  { icon: BarChart2, label: "Analytics", href: "/analytics" },
-  { icon: Bell, label: "Notifications", href: "/notifications" },
   { icon: Settings, label: "Settings", href: "/settings" },
 ];

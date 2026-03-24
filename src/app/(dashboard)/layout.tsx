@@ -15,7 +15,7 @@ import Sidebar from "@/components/layout/Sidebar";
 function MobileNav() {
   const pathname = usePathname();
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 w-full z-50 bg-white border-t border-[#f0efec] flex items-center justify-around px-2 py-2 pb-safe shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+    <nav className="lg:hidden fixed bottom-0 left-0 w-full z-50 bg-bg-primary border-t border-bg-tertiary flex items-center justify-around px-2 py-2 pb-safe shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
       {navItems.map((item) => {
         const isActive = pathname === item.href;
         return (
@@ -25,8 +25,8 @@ function MobileNav() {
             className={cn(
               "flex flex-col items-center justify-center w-16 h-14 rounded-xl transition-all",
               isActive
-                ? "text-[#4F46E5]"
-                : "text-[#a8a7a2] hover:text-[#6b6a65] hover:bg-[#f7f7f6]",
+                ? "text-primary"
+                : "text-text-muted hover:text-text-secondary hover:bg-bg-secondary",
             )}
           >
             <item.icon className="w-5 h-5 mb-1" />
@@ -95,6 +95,7 @@ export default function DashboardLayout({
     <div className="flex bg-white min-h-screen">
       <Sidebar />
       <div className="flex-1 lg:ml-64 bg-white relative pb-20 lg:pb-0 min-w-0 flex flex-col">
+        <DashboardHeader />
         {children}
       </div>
       <MobileNav />
