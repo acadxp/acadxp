@@ -24,7 +24,7 @@ export default function StartPage() {
             alt="AcadXP Logo"
             width={150}
             height={150}
-            className=" rounded-3xl shadow-2xl shadow-violet-500/50 pixel-render"
+            className="rounded-3xl shadow-2xl shadow-violet-500/50 pixel-render"
           />
         </Link>
       </header>

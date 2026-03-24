@@ -9,6 +9,14 @@ import Image from "next/image";
 import { z } from "zod";
 import { loginUser } from "@/lib/api";
 import useAuthStore from "@/store/AuthStore";
+import {
+  ArrowRight,
+  LogIn,
+  UserPlus,
+  School,
+  Terminal,
+  Chrome,
+} from "lucide-react";
 
 const loginSchema = z.object({
   email: z.email("Invalid email address"),
@@ -41,7 +49,7 @@ export default function LoginPage() {
       router.push("/dashboard");
     } catch (error: any) {
       setAuthError(
-        error.response?.data?.message || "An error occurred during login."
+        error.response?.data?.message || "An error occurred during login.",
       );
     } finally {
       setLoading(false);
@@ -49,9 +57,9 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="w-full flex items-center justify-center p-4">
-      <Card className="w-full max-w-md bg-black/80 border-violet-500/30 backdrop-blur-xl">
-        <CardHeader className="space-y-4">
+    <>
+      <header className="mb-12 text-center">
+        <div className="flex flex-col items-center gap-3">
           <div className="flex justify-center">
             <Image
               src="/assets/img/acadxp-logo.png"
@@ -61,79 +69,96 @@ export default function LoginPage() {
               className="rounded-2xl"
             />
           </div>
-          <CardTitle className="text-3xl font-bold text-center text-white">
+          <div className="text-3xl font-bold text-center text-text-text-primary">
             Welcome Back
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          </div>
+        </div>
+      </header>
+      <main className="w-full max-w-[420px]">
+        <div className="bg-primary-bg rounded-2xl p-8 md:p-10 border border-primary">
+          <div className="mb-8">
+            <h2 className="text-2xl font-normal tracking-tight text-text-primary text-editorial">
+              Login
+            </h2>
+            <p className="text-text-secondary text-sm mt-1">
+              Access your learning pathway.
+            </p>
+          </div>
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            <label className=" text-[10px] font-bold uppercase tracking-[0.3em] text-text-primary ml-1">
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-3 rounded-lg border border-primary text-text-primary placeholder-text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+              placeholder="your@email.com"
+              required
+            />
             <div className="space-y-2">
-              <label
-                htmlFor="email"
-                className="text-sm font-medium text-violet-300"
-              >
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg bg-zinc-900/50 border border-violet-500/30 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all"
-                placeholder="your@email.com"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label
-                htmlFor="password"
-                className="text-sm font-medium text-violet-300"
-              >
-                Password
-              </label>
+              <div className="flex justify-between items-center">
+                <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-text-primary ml-1">
+                  Password
+                </label>
+                <a
+                  href="#"
+                  className="text-[11px] font-medium text-accent hover:underline"
+                >
+                  Forgot?
+                </a>
+              </div>
               <input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg bg-zinc-900/50 border border-violet-500/30 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all"
+                className="w-full px-4 py-3 rounded-lg  border border-primary text-text-primary placeholder-text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                 placeholder="••••••••"
                 required
               />
             </div>
-
             <Button
               type="submit"
-              className="w-full py-6 text-lg font-bold bg-violet-600 hover:bg-violet-500 hover:shadow-[0_0_20px_rgba(139,92,246,0.4)] transition-all duration-300"
+              className="w-full py-6 text-lg font-bold bg-primary/90 hover:bg-primary hover:shadow-[0_0_20px_rgba(139,92,246,0.4)] cursor-pointer transition-all duration-300"
               disabled={loading}
             >
               {loading ? "Logging in..." : "Login"}
             </Button>
-
+          </form>
+          <div className=" mt-3 ">
             {error && (
               <p className="text-center text-sm text-red-400">{error}</p>
             )}
-
-            <p className="text-center text-sm text-zinc-400">
-              Do not have an account?{" "}
-              <Link
-                href="/signup"
-                className="text-violet-400 hover:text-violet-300 font-semibold transition-colors"
-              >
-                Sign up
-              </Link>
-            </p>
-
+          </div>
+        </div>
+        <div className="mt-8 text-center">
+          <p className="text-sm text-text-secondary">
+            Don't have an account?
             <Link
-              href="/start"
-              className="block text-center text-sm text-zinc-500 hover:text-violet-400 transition-colors"
+              href="/signup"
+              className="text-primary font-medium hover:underline ml-1"
             >
-              ← Back to start
+              Sign up
             </Link>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+          </p>
+          <Link
+            href="/start"
+            className="block mt-1 text-center text-sm text-text-primary hover:text-primary transition-colors"
+          >
+            ← Back to start
+          </Link>
+        </div>
+      </main>
+      <div className="fixed bottom-8 right-8 hidden md:block">
+        <div className="flex flex-col items-end opacity-20">
+          <span className="text-4xl font-extrabold tracking-tighter text-text-primary">
+            XP
+          </span>
+          <div className="w-16 h-1 bg-primary mt-1"></div>
+        </div>
+      </div>
+    </>
   );
 }
