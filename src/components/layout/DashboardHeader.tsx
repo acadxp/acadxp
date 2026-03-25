@@ -22,7 +22,6 @@ import {
 } from "lucide-react";
 import { logoutUser } from "@/lib/api";
 import MobileMenu from "./MobileMenu";
-import XPProgressBar, { XPData } from "./XPProgressBar";
 import { navItems } from "@/lib/utils";
 
 const userLinks = [
