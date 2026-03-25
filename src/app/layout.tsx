@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Academic XP Tracker",
+  title: "AcadXP - Level up your academic journey",
   description:
-    "Gamify your coding journey and unlock your potential as a developer.",
+    "A premium productivity platform that turns learning into a high-stakes adventure. No fluff. Just data-driven mastery.",
 };
 
 export default function RootLayout({
