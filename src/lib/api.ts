@@ -1,10 +1,11 @@
 import type { RegisterUserPayload, LoginUserPayload } from "../types/user";
+import type { CreateCoursePayload, SearchCoursePayload } from "../types/course";
 
 import axios from "axios";
 
 const api = axios.create({
-  // baseURL: "http://localhost:8001/api",
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
+  baseURL: "http://localhost:8001/api",
+  // baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
@@ -42,7 +43,7 @@ export const refreshToken = async () => {
 
 export const checkUsernameAvailability = async (username: string) => {
   const response = await api.get(
-    `/v1/users/profile/check-username?username=${username}`
+    `/v1/users/profile/check-username?username=${username}`,
   );
 
   const isAvailable =
@@ -57,5 +58,30 @@ export const getMe = async (userId: string, token: string) => {
     },
   });
 
+  return response.data;
+};
+
+export const getAllCourses = async () => {
+  const response = await api.get("/v1/courses/all");
+  return response.data;
+};
+
+export const getCourseById = async (id: string) => {
+  const response = await api.get(`/v1/courses/${id}`);
+  return response.data;
+};
+
+export const createCourse = async (payload: CreateCoursePayload) => {
+  const response = await api.post("/v1/courses/create", payload);
+  return response.data;
+};
+
+export const searchCourses = async (payload: SearchCoursePayload) => {
+  const response = await api.post("/v1/courses/search", payload);
+  return response.data;
+};
+
+export const deleteCourse = async (id: string) => {
+  const response = await api.delete(`/v1/courses/${id}`);
   return response.data;
 };
