@@ -5,8 +5,7 @@ import DashboardSkeleton from "@/components/layout/DashboardSkeleton";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { navItems } from "@/lib/utils";
-import useAuthStore from "@/store/AuthStore";
-import { refreshToken } from "@/lib/api";
+import { useAuthStore } from "@/stores/auth.store";
 import { useEffect, useState } from "react";
 
 import { cn } from "@/lib/utils";
@@ -47,96 +46,35 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const [isInitialized, setIsInitialized] = useState(false);
-  const {
-    accessToken,
-    setAccessToken,
-    user,
-    setUser,
-    setAuthError,
-    setLoading,
-  } = useAuthStore();
+  const { isAuthenticated, isLoading, refreshSession } = useAuthStore();
 
   useEffect(() => {
     const initializeAuth = async () => {
-      setLoading(true);
-
-      // If we already have a valid token, no need to refresh
-      if (accessToken && user) {
-        setLoading(false);
-        setIsInitialized(true);
-        return;
-      }
-
-      // Try to refresh the token (uses httpOnly cookie)
-      try {
-        const { data } = await refreshToken();
-        setAccessToken(data.accessToken);
-        setUser(data.user);
-        setAuthError(null);
-        setIsInitialized(true);
-      } catch (err) {
-        // Refresh failed - no valid session, redirect to login
-        setAuthError("Session expired. Please log in again.");
-        router.replace("/start");
-      } finally {
-        setLoading(false);
-      }
+      await refreshSession();
+      setIsInitialized(true);
     };
 
     initializeAuth();
   }, []);
 
-  // Show skeleton while initializing auth
+  useEffect(() => {
+    if (isInitialized && !isAuthenticated && !isLoading) {
+      router.replace("/start");
+    }
+  }, [isInitialized, isAuthenticated, isLoading, router]);
+
   if (!isInitialized) {
     return <DashboardSkeleton />;
   }
 
   return (
-    <html lang="en">
-      <head>
-        {/* Favicon and manifest links */}
-        <link
-          rel="apple-touch-icon"
-          sizes="180x180"
-          href="/assets/img/favicon_io/apple-touch-icon.png"
-        />
-        <link
-          rel="icon"
-          type="image/png"
-          sizes="32x32"
-          href="/assets/img/favicon_io/favicon-32x32.png"
-        />
-        <link
-          rel="icon"
-          type="image/png"
-          sizes="16x16"
-          href="/assets/img/favicon_io/favicon-16x16.png"
-        />
-        <link rel="manifest" href="/assets/img/favicon_io/site.webmanifest" />
-        <link rel="shortcut icon" href="/assets/img/favicon_io/favicon.ico" />
-        <link
-          rel="icon"
-          type="image/png"
-          sizes="192x192"
-          href="/assets/img/favicon_io/android-chrome-192x192.png"
-        />
-        <link
-          rel="icon"
-          type="image/png"
-          sizes="512x512"
-          href="/assets/img/favicon_io/android-chrome-512x512.png"
-        />
-      </head>
-      <body>
-        <div className="flex bg-white min-h-screen">
-          <Sidebar />
-          <div className="flex-1 lg:ml-64 bg-white relative pb-20 lg:pb-0 min-w-0 flex flex-col">
-            <DashboardHeader />
-            {children}
-          </div>
-          <MobileNav />
-        </div>
-      </body>
-    </html>
+    <div className="flex bg-white min-h-screen">
+      <Sidebar />
+      <div className="flex-1 lg:ml-64 bg-white relative pb-20 lg:pb-0 min-w-0 flex flex-col">
+        <DashboardHeader />
+        {children}
+      </div>
+      <MobileNav />
+    </div>
   );
 }

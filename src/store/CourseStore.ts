@@ -1,8 +1,10 @@
 import { create } from "zustand";
 import type { CourseState, Course, CreateCoursePayload, SearchCoursePayload } from "../types/course";
+import useAuthStore from "./AuthStore";
 import {
   getAllCourses,
   getCourseById,
+  getEnrolledCourses,
   createCourse as createCourseApi,
   searchCourses as searchCoursesApi,
   deleteCourse as deleteCourseApi,
@@ -27,9 +29,29 @@ const useCourseStore = create<CourseState>()((set) => ({
     set({ loading: true, error: null });
     try {
       const response = await getAllCourses();
-      set({ courses: response, loading: false });
+      set({
+        courses: Array.isArray(response) ? response : (response.courses ?? []),
+        loading: false,
+      });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to fetch courses";
+      set({ error: message, loading: false });
+    }
+  },
+
+  fetchEnrolledCourses: async () => {
+    set({ loading: true, error: null });
+    try {
+      const token = useAuthStore.getState().accessToken;
+      if (!token) throw new Error("No authentication token found");
+      const response = await getEnrolledCourses(token);
+      const enrollments = Array.isArray(response) ? response : (response.enrollments ?? []);
+      set({
+        courses: enrollments.map((e: { course: Course }) => e.course),
+        loading: false,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to fetch enrolled courses";
       set({ error: message, loading: false });
     }
   },
@@ -38,7 +60,10 @@ const useCourseStore = create<CourseState>()((set) => ({
     set({ loading: true, error: null, currentCourse: null });
     try {
       const response = await getCourseById(id);
-      set({ currentCourse: response, loading: false });
+      set({
+        currentCourse: response.course ?? response,
+        loading: false,
+      });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to fetch course";
       set({ error: message, loading: false });

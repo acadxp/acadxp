@@ -66,6 +66,15 @@ export const getAllCourses = async () => {
   return response.data;
 };
 
+export const getEnrolledCourses = async (token: string) => {
+  const response = await api.get("/v1/courses/enrollments", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return response.data;
+};
+
 export const getCourseById = async (id: string) => {
   const response = await api.get(`/v1/courses/${id}`);
   return response.data;

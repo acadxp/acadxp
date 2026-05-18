@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import useAuthStore from "@/store/AuthStore";
+import { useAuthStore } from "@/stores/auth.store";
 import {
   LayoutDashboard,
   BookOpen,
@@ -20,7 +20,7 @@ import {
   Search,
   Zap,
 } from "lucide-react";
-import { logoutUser } from "@/lib/api";
+
 import MobileMenu from "./MobileMenu";
 import { navItems } from "@/lib/utils";
 
@@ -34,7 +34,7 @@ export default function DashboardHeader() {
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const { user } = useAuthStore();
+  const { user, logout } = useAuthStore();
 
   const isActive = (href: string) => pathname === href;
 
@@ -157,9 +157,9 @@ export default function DashboardHeader() {
                   </div>
                   <div className="border-t border-bg-tertiary py-2">
                     <button
-                      onClick={() => {
+                      onClick={async () => {
                         setUserMenuOpen(false);
-                        logoutUser();
+                        await logout();
                         router.push("/login");
                       }}
                       className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-500/10 w-full transition-colors"

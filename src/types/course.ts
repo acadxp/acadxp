@@ -54,6 +54,7 @@ export interface CourseState {
   setError: (error: string | null) => void;
 
   fetchAllCourses: () => Promise<void>;
+  fetchEnrolledCourses: () => Promise<void>;
   fetchCourseById: (id: string) => Promise<void>;
   createCourse: (payload: CreateCoursePayload) => Promise<Course>;
   searchCourses: (payload: SearchCoursePayload) => Promise<void>;

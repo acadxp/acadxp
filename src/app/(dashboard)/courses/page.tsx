@@ -4,19 +4,21 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Breadcrumbs } from "@heroui/react";
 import { Plus, Search } from "lucide-react";
-import useCourseStore from "@/store/CourseStore";
+import { useCourseStore } from "@/stores/course.store";
 import { CourseCard } from "@/components/courses/course-card";
 import { CoursesGridSkeleton } from "@/components/courses/courses-grid-skeleton";
 import { CoursesEmptyState } from "@/components/courses/courses-empty-state";
 import { CoursesErrorState } from "@/components/courses/courses-error-state";
 
 export default function CoursesPage() {
-  const { courses, loading, error, fetchAllCourses } = useCourseStore();
+  const { enrollments, isLoading, fetchEnrollments } = useCourseStore();
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    fetchAllCourses();
-  }, [fetchAllCourses]);
+    fetchEnrollments();
+  }, [fetchEnrollments]);
+
+  const courses = enrollments.map((e) => e.course);
 
   const filtered = courses.filter(
     (c) =>
@@ -34,9 +36,9 @@ export default function CoursesPage() {
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-text-primary">Courses</h1>
+            <h1 className="text-2xl font-bold text-text-primary">My Courses</h1>
             <p className="text-sm text-text-muted mt-1">
-              {courses.length} course{courses.length !== 1 ? "s" : ""} available
+              {enrollments.length} course{enrollments.length !== 1 ? "s" : ""} enrolled
             </p>
           </div>
           <Link
@@ -59,22 +61,15 @@ export default function CoursesPage() {
           />
         </div>
 
-        {loading && <CoursesGridSkeleton />}
-        {error && (
-          <CoursesErrorState
-            message={error}
-            onRetry={() => useCourseStore.getState().fetchAllCourses()}
-          />
-        )}
-
-        {!loading && !error && filtered.length === 0 && (
+        {isLoading && <CoursesGridSkeleton />}
+        {!isLoading && filtered.length === 0 && (
           <CoursesEmptyState
             hasSearch={search.length > 0}
-            hasCourses={courses.length === 0}
+            hasCourses={enrollments.length === 0}
           />
         )}
 
-        {!loading && !error && filtered.length > 0 && (
+        {!isLoading && filtered.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filtered.map((course) => (
               <CourseCard key={course.id} course={course} />
