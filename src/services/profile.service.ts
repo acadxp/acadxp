@@ -12,6 +12,15 @@ export const profileService = {
     socials?: Record<string, string>;
   }) => api.post<ApiResponse<{ profile: Profile }>>("/users/profile/create", data),
 
+  updateProfile: (data: {
+    name?: string;
+    username?: string;
+    bio?: string;
+    location?: string;
+    socials?: Record<string, string>;
+    preferences?: { theme?: string; accentColor?: string };
+  }) => api.patch<ApiResponse<{ profile: Profile }>>("/users/profile", data),
+
   checkUsername: (username: string) =>
     api.get<ApiResponse>("/users/profile/check-username", {
       params: { username },

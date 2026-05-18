@@ -1,15 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuthStore } from "@/stores/auth.store";
 import { profileService } from "@/services/profile.service";
+import { academicInfoService } from "@/services/academic-info.service";
+import { notificationPreferenceService } from "@/services/notification-preference.service";
+import { apiKeyService } from "@/services/api-key.service";
 import { motion, AnimatePresence } from "motion/react";
 import {
   User, GraduationCap, Bell, Palette, Lock, Key,
   ShieldAlert, CheckCircle2, Github, Linkedin, Globe, Twitter,
-  Laptop, Smartphone, Trash2, Loader2, Eye, EyeOff,
+  Laptop, Smartphone, Trash2, Loader2, Eye, EyeOff, Copy, X,
 } from "lucide-react";
 import type { Profile } from "@/types";
+import type { NotificationPreference } from "@/services/notification-preference.service";
+import type { ApiKey } from "@/services/api-key.service";
+import { maskApiKey, getApiKeyStatus, formatLastUsed, generateApiKeyName } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 
 const sections = [
@@ -26,33 +32,53 @@ function getInitials(name: string) {
   return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 }
 
+function useSuccessToast() {
+  const [show, setShow] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const showToast = useCallback(() => {
+    setShow(true);
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => setShow(false), 3000);
+  }, []);
+  return { show, showToast };
+}
+
 export default function SettingsPage() {
   const { user, logout } = useAuthStore();
   const router = useRouter();
   const [activeSection, setActiveSection] = useState("profile");
-  const [showSuccess, setShowSuccess] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [acadInfoId, setAcadInfoId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const { show: showSuccess, showToast } = useSuccessToast();
 
   useEffect(() => {
     profileService.getProfile().then((res) => {
-      setProfile(res.data.data?.profile ?? null);
+      const p = res.data.data?.profile ?? null;
+      setProfile(p);
+      setAcadInfoId(p?.academicInfo?.id ?? null);
     }).catch(() => {});
   }, []);
 
-  const handleSave = async () => {
+  const wrapSave = async (fn: () => Promise<any>) => {
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 800));
-    setSaving(false);
-    setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 3000);
+    try {
+      await fn();
+      showToast();
+      const res = await profileService.getProfile();
+      setProfile(res.data.data?.profile ?? null);
+      setAcadInfoId(res.data.data?.profile?.academicInfo?.id ?? null);
+    } catch {
+      // error handled by toast or ignore
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-bg-secondary">
       <div className="max-w-5xl mx-auto py-8 px-4 md:px-8">
         <div className="flex flex-col md:flex-row gap-8">
-          {/* Sub-navigation */}
           <nav className="w-full md:w-48 flex flex-row md:flex-col gap-1 overflow-x-auto md:sticky md:top-24 h-fit">
             {sections.map((section) => (
               <button
@@ -70,7 +96,6 @@ export default function SettingsPage() {
             ))}
           </nav>
 
-          {/* Content */}
           <div className="flex-1 space-y-10 pb-20">
             <AnimatePresence mode="wait">
               <motion.div
@@ -84,17 +109,31 @@ export default function SettingsPage() {
                   <ProfileSection
                     user={user}
                     profile={profile}
-                    onSave={handleSave}
+                    onSave={(data) => wrapSave(() => profileService.updateProfile(data))}
                     saving={saving}
                   />
                 )}
                 {activeSection === "academic" && (
-                  <AcademicSection onSave={handleSave} saving={saving} />
+                  <AcademicSection
+                    profile={profile}
+                    onSave={(data) => wrapSave(() => academicInfoService.updateMyInfo(data))}
+                    saving={saving}
+                  />
                 )}
-                {activeSection === "notifications" && <NotificationsSection />}
-                {activeSection === "appearance" && <AppearanceSection />}
+                {activeSection === "notifications" && (
+                  <NotificationsSection />
+                )}
+                {activeSection === "appearance" && (
+                  <AppearanceSection
+                    profile={profile}
+                    onSave={(data) => wrapSave(() => profileService.updateProfile(data))}
+                    saving={saving}
+                  />
+                )}
                 {activeSection === "security" && <SecuritySection />}
-                {activeSection === "api" && <ApiKeysSection />}
+                {activeSection === "api" && (
+                  <ApiKeysSection />
+                )}
                 {activeSection === "danger" && (
                   <DangerZoneSection
                     onLogout={async () => {
@@ -109,7 +148,6 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* Success Toast */}
       <AnimatePresence>
         {showSuccess && (
           <motion.div
@@ -136,9 +174,28 @@ function ProfileSection({
 }: {
   user: any;
   profile: Profile | null;
-  onSave: () => void;
+  onSave: (data: any) => Promise<void>;
   saving: boolean;
 }) {
+  const [name, setName] = useState(user?.name ?? "");
+  const [username, setUsername] = useState(profile?.username ?? "");
+  const [bio, setBio] = useState(profile?.bio ?? "");
+  const [location, setLocation] = useState(profile?.location ?? "");
+  const socials = profile?.socials as Record<string, string> | undefined;
+  const [github, setGithub] = useState(socials?.github ?? "");
+  const [linkedin, setLinkedin] = useState(socials?.linkedin ?? "");
+  const [twitter, setTwitter] = useState(socials?.twitter ?? "");
+  const [website, setWebsite] = useState(socials?.website ?? "");
+
+  const handleSave = () =>
+    onSave({
+      name,
+      username,
+      bio,
+      location,
+      socials: { github, linkedin, twitter, website },
+    });
+
   return (
     <section>
       <h2 className="text-2xl font-extrabold tracking-tight text-text-primary mb-8">Profile Settings</h2>
@@ -153,7 +210,7 @@ function ProfileSection({
         </div>
 
         <div className="grid grid-cols-1 gap-6">
-          <InputGroup label="Full name" defaultValue={user?.name ?? ""} />
+          <InputGroup label="Full name" value={name} onChange={setName} />
           <div className="space-y-1.5">
             <label className="text-sm font-bold text-text-secondary">Username</label>
             <div className="relative">
@@ -161,7 +218,8 @@ function ProfileSection({
               <input
                 className="w-full pl-8 bg-bg-primary border border-bg-tertiary rounded-xl focus:ring-2 focus:ring-primary focus:border-primary px-4 py-2.5 outline-none transition-all text-text-primary"
                 type="text"
-                defaultValue={profile?.username ?? ""}
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
               />
             </div>
           </div>
@@ -185,25 +243,26 @@ function ProfileSection({
               className="w-full bg-bg-primary border border-bg-tertiary rounded-xl focus:ring-2 focus:ring-primary focus:border-primary px-4 py-2.5 outline-none transition-all resize-none text-text-primary"
               placeholder="Tell us about your learning journey..."
               rows={3}
-              defaultValue={profile?.bio ?? ""}
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
             />
           </div>
-          <InputGroup label="Location" defaultValue={profile?.location ?? ""} />
+          <InputGroup label="Location" value={location} onChange={setLocation} />
         </div>
 
         <div className="pt-4 space-y-6">
           <h3 className="text-sm font-black uppercase tracking-widest text-text-muted">Social Connections</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <SocialInput icon={Github} placeholder="GitHub" defaultValue={profile?.socials?.github ?? ""} />
-            <SocialInput icon={Linkedin} placeholder="LinkedIn" defaultValue={profile?.socials?.linkedin ?? ""} />
-            <SocialInput icon={Twitter} placeholder="Twitter/X" defaultValue={profile?.socials?.twitter ?? ""} />
-            <SocialInput icon={Globe} placeholder="Website" defaultValue={profile?.socials?.website ?? ""} />
+            <SocialInput icon={Github} placeholder="GitHub" value={github} onChange={setGithub} />
+            <SocialInput icon={Linkedin} placeholder="LinkedIn" value={linkedin} onChange={setLinkedin} />
+            <SocialInput icon={Twitter} placeholder="Twitter/X" value={twitter} onChange={setTwitter} />
+            <SocialInput icon={Globe} placeholder="Website" value={website} onChange={setWebsite} />
           </div>
         </div>
 
         <div className="flex justify-end pt-4">
           <button
-            onClick={onSave}
+            onClick={handleSave}
             disabled={saving}
             className="bg-primary text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2"
           >
@@ -217,42 +276,74 @@ function ProfileSection({
 }
 
 /* ─── Academic Section ─── */
-function AcademicSection({ onSave, saving }: { onSave: () => void; saving: boolean }) {
+function AcademicSection({
+  profile,
+  onSave,
+  saving,
+}: {
+  profile: Profile | null;
+  onSave: (data: any) => Promise<void>;
+  saving: boolean;
+}) {
+  const acad = profile?.academicInfo;
+  const [institution, setInstitution] = useState(acad?.institution ?? "");
+  const [degree, setDegree] = useState<string>(acad?.degree ?? "MASTERS");
+  const [major, setMajor] = useState(acad?.major ?? "");
+  const [semester, setSemester] = useState(acad?.semester ?? "");
+  const [enrollmentStatus, setEnrollmentStatus] = useState<string>(acad?.enrollmentStatus ?? "FULL_TIME");
+  const [enrolledDate, setEnrolledDate] = useState(
+    acad?.enrolledDate ? new Date(acad.enrolledDate).toISOString().split("T")[0] : "",
+  );
+  const [graduationDate, setGraduationDate] = useState(
+    acad?.graduationDate ? new Date(acad.graduationDate).toISOString().split("T")[0] : "",
+  );
+
+  const handleSave = () =>
+    onSave({ institution, degree, major, semester, enrollmentStatus, enrolledDate, graduationDate });
+
   return (
     <section>
       <h2 className="text-2xl font-extrabold tracking-tight text-text-primary mb-8">Academic Info</h2>
       <div className="bg-bg-primary p-8 rounded-xl border border-bg-tertiary space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="md:col-span-2">
-            <InputGroup label="Institution name" defaultValue="" />
+            <InputGroup label="Institution name" value={institution} onChange={setInstitution} />
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-bold text-text-secondary">Degree type</label>
-            <select className="w-full bg-bg-primary border border-bg-tertiary rounded-xl focus:ring-2 focus:ring-primary px-4 py-2.5 outline-none text-text-primary">
-              <option>Bachelor&apos;s</option>
-              <option selected>Master&apos;s</option>
-              <option>PhD</option>
-              <option>Diploma</option>
-              <option>Certificate</option>
+            <select
+              className="w-full bg-bg-primary border border-bg-tertiary rounded-xl focus:ring-2 focus:ring-primary px-4 py-2.5 outline-none text-text-primary"
+              value={degree}
+              onChange={(e) => setDegree(e.target.value)}
+            >
+              <option value="BACHELORS">Bachelor&apos;s</option>
+              <option value="MASTERS">Master&apos;s</option>
+              <option value="PHD">PhD</option>
+              <option value="DIPLOMA">Diploma</option>
+              <option value="CERTIFICATE">Certificate</option>
             </select>
           </div>
-          <InputGroup label="Major / Field of study" defaultValue="" />
-          <InputGroup label="Current semester" defaultValue="" />
+          <InputGroup label="Major / Field of study" value={major} onChange={setMajor} />
+          <InputGroup label="Current semester" value={semester} onChange={setSemester} />
           <div className="space-y-1.5">
             <label className="text-sm font-bold text-text-secondary">Enrollment status</label>
-            <select className="w-full bg-bg-primary border border-bg-tertiary rounded-xl focus:ring-2 focus:ring-primary px-4 py-2.5 outline-none text-text-primary">
-              <option selected>Full-time</option>
-              <option>Part-time</option>
-              <option>Suspended</option>
-              <option>Graduated</option>
+            <select
+              className="w-full bg-bg-primary border border-bg-tertiary rounded-xl focus:ring-2 focus:ring-primary px-4 py-2.5 outline-none text-text-primary"
+              value={enrollmentStatus}
+              onChange={(e) => setEnrollmentStatus(e.target.value)}
+            >
+              <option value="FULL_TIME">Full-time</option>
+              <option value="PART_TIME">Part-time</option>
+              <option value="SUSPENDED">Suspended</option>
+              <option value="GRADUATED">Graduated</option>
             </select>
           </div>
-          <InputGroup label="Enrollment date" type="date" />
-          <InputGroup label="Expected graduation date" type="date" />
+          <InputGroup label="Enrollment date" type="date" value={enrolledDate} onChange={setEnrolledDate} />
+          <InputGroup label="Expected graduation date" type="date" value={graduationDate} onChange={setGraduationDate} />
         </div>
         <div className="flex justify-end pt-4">
           <button
-            onClick={onSave}
+            onClick={handleSave}
             disabled={saving}
             className="bg-primary text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2"
           >
@@ -267,54 +358,146 @@ function AcademicSection({ onSave, saving }: { onSave: () => void; saving: boole
 
 /* ─── Notifications Section ─── */
 function NotificationsSection() {
+  const [prefs, setPrefs] = useState<NotificationPreference[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    notificationPreferenceService.getPreferences().then((res) => {
+      setPrefs(res.data.data ?? []);
+    }).catch(() => {}).finally(() => setLoading(false));
+  }, []);
+
+  const togglePref = async (type: string, currentEnabled: boolean) => {
+    const updated = prefs.map((p) =>
+      p.type === type ? { ...p, enabled: !currentEnabled } : p,
+    );
+    if (!updated.find((p) => p.type === type)) {
+      updated.push({ type, enabled: !currentEnabled } as any);
+    }
+    setPrefs(updated);
+  };
+
+  const savePrefs = async () => {
+    setSaving(true);
+    try {
+      const res = await notificationPreferenceService.updatePreferences(
+        prefs.map((p) => ({ type: p.type, enabled: p.enabled })),
+      );
+      setPrefs(res.data.data ?? []);
+    } catch {
+      // ignore
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const allTypes = [
+    { key: "STREAK", title: "Streak reminders", desc: "Get notified when your streak is at risk" },
+    { key: "DEADLINE", title: "Deadline alerts", desc: "Reminders 24h before challenge deadlines" },
+    { key: "LEVEL_UP", title: "Level-up celebration", desc: "Notification when you reach a new level" },
+    { key: "BADGE", title: "Badge unlocked", desc: "When you earn a new badge" },
+    { key: "GOAL", title: "Weekly summary", desc: "Your weekly XP and progress digest" },
+    { key: "GOAL", title: "Goal milestones", desc: "When you hit 25%, 50%, 75%, 100% of a goal" },
+  ];
+
+  if (loading) return <Loader2 className="w-6 h-6 animate-spin text-primary mx-auto mt-12" />;
+
   return (
     <section>
-      <h2 className="text-2xl font-extrabold tracking-tight text-text-primary mb-8">Notifications</h2>
+      <div className="flex items-center justify-between mb-8">
+        <h2 className="text-2xl font-extrabold tracking-tight text-text-primary">Notifications</h2>
+        <button
+          onClick={savePrefs}
+          disabled={saving}
+          className="bg-primary text-white px-5 py-2 rounded-xl text-sm font-bold hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-2"
+        >
+          {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+          Save
+        </button>
+      </div>
       <div className="bg-bg-primary rounded-xl border border-bg-tertiary divide-y divide-bg-tertiary overflow-hidden">
-        <ToggleItem title="Streak reminders" description="Get notified when your streak is at risk" defaultChecked />
-        <ToggleItem title="Deadline alerts" description="Reminders 24h before challenge deadlines" defaultChecked />
-        <ToggleItem title="Level-up celebration" description="Notification when you reach a new level" />
-        <ToggleItem title="Badge unlocked" description="When you earn a new badge" defaultChecked />
-        <ToggleItem title="Weekly summary" description="Your weekly XP and progress digest" />
-        <ToggleItem title="Goal milestones" description="When you hit 25%, 50%, 75%, 100% of a goal" defaultChecked />
+        {prefs.length === 0 ? (
+          <p className="p-6 text-text-muted text-sm">No notification preferences yet.</p>
+        ) : (
+          prefs.map((p) => {
+            const info = allTypes.find((t) => t.key === p.type);
+            return (
+              <ToggleItem
+                key={p.id}
+                title={info?.title ?? p.type}
+                description={info?.desc ?? ""}
+                checked={p.enabled}
+                onChange={() => togglePref(p.type, p.enabled)}
+              />
+            );
+          })
+        )}
       </div>
     </section>
   );
 }
 
 /* ─── Appearance Section ─── */
-function AppearanceSection() {
+function AppearanceSection({
+  profile,
+  onSave,
+  saving,
+}: {
+  profile: Profile | null;
+  onSave: (data: any) => Promise<void>;
+  saving: boolean;
+}) {
+  const prefs = (profile?.preferences ?? {}) as any;
+  const [theme, setTheme] = useState(prefs.theme ?? "system");
+  const [accentColor, setAccentColor] = useState(prefs.accentColor ?? "#4f46e5");
+
+  const handleSave = () => onSave({ preferences: { theme, accentColor } });
+
   return (
     <section>
-      <h2 className="text-2xl font-extrabold tracking-tight text-text-primary mb-8">Appearance</h2>
+      <div className="flex items-center justify-between mb-8">
+        <h2 className="text-2xl font-extrabold tracking-tight text-text-primary">Appearance</h2>
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="bg-primary text-white px-5 py-2 rounded-xl text-sm font-bold hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-2"
+        >
+          {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+          Save
+        </button>
+      </div>
       <div className="bg-bg-primary p-8 rounded-xl border border-bg-tertiary space-y-10">
         <div className="space-y-4">
           <label className="text-sm font-bold text-text-secondary">Theme</label>
-          <div className="grid grid-cols-2 gap-6 max-w-md">
-            <ThemeCard label="Light" active />
-            <ThemeCard label="Dark" dark />
-          </div>
-          <div className="flex items-center gap-2 mt-4">
-            <input
-              className="rounded border-bg-tertiary text-primary focus:ring-primary"
-              id="system"
-              type="checkbox"
-            />
-            <label className="text-sm text-text-secondary" htmlFor="system">
-              Follow system default
-            </label>
+          <div className="flex gap-3">
+            {["light", "dark", "system"].map((t) => (
+              <button
+                key={t}
+                onClick={() => setTheme(t)}
+                className={`px-6 py-3 rounded-xl text-sm font-bold border-2 transition-all ${
+                  theme === t
+                    ? "border-primary bg-primary/5 text-primary"
+                    : "border-bg-tertiary text-text-secondary hover:border-text-muted"
+                }`}
+              >
+                {t.charAt(0).toUpperCase() + t.slice(1)}
+              </button>
+            ))}
           </div>
         </div>
 
         <div className="space-y-4">
           <label className="text-sm font-bold text-text-secondary">Accent color</label>
           <div className="flex flex-wrap gap-4">
-            <ColorSwatch color="#4f46e5" active />
-            <ColorSwatch color="#7c3aed" />
-            <ColorSwatch color="#0d9488" />
-            <ColorSwatch color="#f59e0b" />
-            <ColorSwatch color="#f43f5e" />
-            <ColorSwatch color="#334155" />
+            {["#4f46e5", "#7c3aed", "#0d9488", "#f59e0b", "#f43f5e", "#334155"].map((c) => (
+              <ColorSwatch
+                key={c}
+                color={c}
+                active={accentColor === c}
+                onClick={() => setAccentColor(c)}
+              />
+            ))}
           </div>
         </div>
       </div>
@@ -335,16 +518,8 @@ function SecuritySection() {
         <div className="space-y-6">
           <h3 className="text-sm font-black uppercase tracking-widest text-text-muted">Change Password</h3>
           <div className="space-y-4 max-w-md">
-            <PasswordInput
-              label="Current password"
-              show={showCurrent}
-              onToggle={() => setShowCurrent(!showCurrent)}
-            />
-            <PasswordInput
-              label="New password"
-              show={showNew}
-              onToggle={() => setShowNew(!showNew)}
-            />
+            <PasswordInput label="Current password" show={showCurrent} onToggle={() => setShowCurrent(!showCurrent)} />
+            <PasswordInput label="New password" show={showNew} onToggle={() => setShowNew(!showNew)} />
             <div className="pt-2">
               <div className="flex gap-1 h-1.5 mb-1">
                 <div className="flex-1 bg-primary rounded-full" />
@@ -354,11 +529,7 @@ function SecuritySection() {
               </div>
               <p className="text-[10px] font-bold text-primary">Strong</p>
             </div>
-            <PasswordInput
-              label="Confirm new password"
-              show={showConfirm}
-              onToggle={() => setShowConfirm(!showConfirm)}
-            />
+            <PasswordInput label="Confirm new password" show={showConfirm} onToggle={() => setShowConfirm(!showConfirm)} />
           </div>
           <button className="bg-primary text-white px-6 py-2.5 rounded-xl font-bold hover:opacity-90 transition-all">
             Update password
@@ -368,17 +539,8 @@ function SecuritySection() {
         <div className="border-t border-bg-tertiary pt-10 space-y-6">
           <h3 className="text-sm font-black uppercase tracking-widest text-text-muted">Active Sessions</h3>
           <div className="space-y-4">
-            <SessionItem
-              icon={Laptop}
-              title='MacBook Pro 16"'
-              details="192.168.x.x &middot; Last active: Just now"
-              current
-            />
-            <SessionItem
-              icon={Smartphone}
-              title="iPhone 15 Pro"
-              details="172.20.x.x &middot; Last active: 2 hours ago"
-            />
+            <SessionItem icon={Laptop} title='MacBook Pro 16"' details="192.168.x.x · Last active: Just now" current />
+            <SessionItem icon={Smartphone} title="iPhone 15 Pro" details="172.20.x.x · Last active: 2 hours ago" />
           </div>
           <button className="text-xs font-bold text-red-500 hover:underline uppercase tracking-widest">
             Revoke all other sessions
@@ -391,34 +553,157 @@ function SecuritySection() {
 
 /* ─── API Keys Section ─── */
 function ApiKeysSection() {
+  const [keys, setKeys] = useState<ApiKey[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
+  const [newKey, setNewKey] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const fetchKeys = async () => {
+    try {
+      const res = await apiKeyService.getKeys();
+      setKeys(res.data.data ?? []);
+    } catch {
+      // ignore
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchKeys(); }, []);
+
+  const handleGenerate = async () => {
+    setGenerating(true);
+    try {
+      const res = await apiKeyService.createKey(generateApiKeyName());
+      const created = res.data.data;
+      if (created?.rawKey) {
+        setNewKey(created.rawKey);
+      }
+      await fetchKeys();
+    } catch {
+      // ignore
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await apiKeyService.deleteKey(id);
+      setKeys((prev) => prev.filter((k) => k.id !== id));
+    } catch {
+      // ignore
+    }
+  };
+
+  const copyToClipboard = async () => {
+    if (!newKey) return;
+    try {
+      await navigator.clipboard.writeText(newKey);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // ignore
+    }
+  };
+
   return (
     <section>
       <div className="flex justify-between items-end mb-8">
         <div>
           <h2 className="text-2xl font-extrabold tracking-tight text-text-primary">API Keys</h2>
-          <p className="text-text-secondary text-sm mt-1">
-            Use API keys to access AcadXP from external tools or scripts.
-          </p>
+          <p className="text-text-secondary text-sm mt-1">Use API keys to access AcadXP from external tools or scripts.</p>
         </div>
-        <button className="bg-primary text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-primary/20 hover:opacity-90 transition-all">
+        <button
+          onClick={handleGenerate}
+          disabled={generating}
+          className="bg-primary text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-primary/20 hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-2"
+        >
+          {generating && <Loader2 className="w-4 h-4 animate-spin" />}
           Generate new key
         </button>
       </div>
+
+      {/* One-time key reveal */}
+      <AnimatePresence>
+        {newKey && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-amber-800 mb-1">Key generated — copy it now. You won&apos;t see it again.</p>
+                <code className="block text-xs bg-amber-100 px-3 py-2 rounded-lg text-amber-900 font-mono break-all select-all">
+                  {newKey}
+                </code>
+              </div>
+              <div className="flex gap-2 flex-shrink-0">
+                <button
+                  onClick={copyToClipboard}
+                  className="p-2 bg-amber-100 hover:bg-amber-200 rounded-lg transition-colors"
+                >
+                  {copied ? <CheckCircle2 size={18} className="text-emerald-600" /> : <Copy size={18} className="text-amber-700" />}
+                </button>
+                <button onClick={() => setNewKey(null)} className="p-2 hover:bg-amber-200 rounded-lg transition-colors">
+                  <X size={18} className="text-amber-700" />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="bg-bg-primary rounded-xl border border-bg-tertiary overflow-hidden">
-        <table className="w-full text-left border-collapse">
-          <thead className="bg-bg-secondary border-b border-bg-tertiary">
-            <tr>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-text-muted">Key Name</th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-text-muted">Created</th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-text-muted">Last Used</th>
-              <th className="px-6 py-4 text-right"></th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-bg-tertiary">
-            <ApiKeyRow name="VS Code Extension" keyStr="axp_live_••••••••••••••••3f9a" date="Oct 12, 2023" lastUsed="2 days ago" />
-            <ApiKeyRow name="Personal CLI Tool" keyStr="axp_live_••••••••••••••••8e12" date="Jan 05, 2024" lastUsed="Never" />
-          </tbody>
-        </table>
+        {loading ? (
+          <div className="p-8 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+        ) : keys.length === 0 ? (
+          <p className="p-8 text-text-muted text-sm text-center">No API keys yet.</p>
+        ) : (
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-bg-secondary border-b border-bg-tertiary">
+              <tr>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-text-muted">Key Name</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-text-muted">Status</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-text-muted">Created</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-text-muted">Last Used</th>
+                <th className="px-6 py-4 text-right"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-bg-tertiary">
+              {keys.map((key) => {
+                const status = getApiKeyStatus(key);
+                return (
+                  <tr key={key.id} className="hover:bg-bg-secondary transition-colors">
+                    <td className="px-6 py-4">
+                      <p className="font-bold text-sm text-text-primary">{key.name ?? "Unnamed"}</p>
+                      <code className="text-[10px] bg-bg-tertiary px-2 py-0.5 rounded text-text-secondary font-mono">
+                        {maskApiKey(key.key)}
+                      </code>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest ${status.color}`}>
+                        {status.label}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-text-secondary">
+                      {new Date(key.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-text-secondary">{formatLastUsed(key.lastUsedAt)}</td>
+                    <td className="px-6 py-4 text-right">
+                      <button onClick={() => handleDelete(key.id)} className="text-red-500 hover:bg-red-50 p-2 rounded transition-colors">
+                        <Trash2 size={18} />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
       </div>
     </section>
   );
@@ -433,9 +718,7 @@ function DangerZoneSection({ onLogout }: { onLogout: () => void }) {
         <div className="flex items-center justify-between gap-8 flex-wrap">
           <div>
             <p className="font-bold text-red-600">Delete all progress</p>
-            <p className="text-sm text-text-secondary max-w-lg">
-              Permanently reset your XP, level, badges and challenge history. Your account and courses remain.
-            </p>
+            <p className="text-sm text-text-secondary max-w-lg">Permanently reset your XP, level, badges and challenge history. Your account and courses remain.</p>
           </div>
           <button className="px-6 py-2.5 border-2 border-red-500 text-red-500 font-bold rounded-xl hover:bg-red-500 hover:text-white transition-all whitespace-nowrap">
             Reset progress
@@ -444,9 +727,7 @@ function DangerZoneSection({ onLogout }: { onLogout: () => void }) {
         <div className="pt-8 border-t border-red-100 flex items-center justify-between gap-8 flex-wrap">
           <div>
             <p className="font-bold text-red-600">Logout</p>
-            <p className="text-sm text-text-secondary max-w-lg">
-              Sign out of your account on this device.
-            </p>
+            <p className="text-sm text-text-secondary max-w-lg">Sign out of your account on this device.</p>
           </div>
           <button
             onClick={onLogout}
@@ -458,9 +739,7 @@ function DangerZoneSection({ onLogout }: { onLogout: () => void }) {
         <div className="pt-8 border-t border-red-100 flex items-center justify-between gap-8 flex-wrap">
           <div>
             <p className="font-bold text-red-600">Delete account</p>
-            <p className="text-sm text-text-secondary max-w-lg">
-              Permanently delete your account and all associated data. This cannot be undone.
-            </p>
+            <p className="text-sm text-text-secondary max-w-lg">Permanently delete your account and all associated data. This cannot be undone.</p>
           </div>
           <button className="px-6 py-2.5 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-all shadow-lg shadow-red-200 whitespace-nowrap">
             Delete account
@@ -473,12 +752,11 @@ function DangerZoneSection({ onLogout }: { onLogout: () => void }) {
 
 /* ─── Helper Components ─── */
 function InputGroup({
-  label,
-  defaultValue = "",
-  type = "text",
+  label, value, onChange, type = "text",
 }: {
   label: string;
-  defaultValue?: string;
+  value: string;
+  onChange: (v: string) => void;
   type?: string;
 }) {
   return (
@@ -487,20 +765,20 @@ function InputGroup({
       <input
         className="w-full bg-bg-primary border border-bg-tertiary rounded-xl focus:ring-2 focus:ring-primary focus:border-primary px-4 py-2.5 outline-none transition-all text-text-primary"
         type={type}
-        defaultValue={defaultValue}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
       />
     </div>
   );
 }
 
 function SocialInput({
-  icon: Icon,
-  placeholder,
-  defaultValue = "",
+  icon: Icon, placeholder, value, onChange,
 }: {
   icon: any;
   placeholder: string;
-  defaultValue?: string;
+  value: string;
+  onChange: (v: string) => void;
 }) {
   return (
     <div className="relative">
@@ -509,16 +787,15 @@ function SocialInput({
         className="w-full pl-11 bg-bg-primary border border-bg-tertiary rounded-xl focus:ring-2 focus:ring-primary focus:border-primary px-4 py-2.5 outline-none transition-all text-text-primary"
         placeholder={placeholder}
         type="text"
-        defaultValue={defaultValue}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
       />
     </div>
   );
 }
 
 function PasswordInput({
-  label,
-  show,
-  onToggle,
+  label, show, onToggle,
 }: {
   label: string;
   show: boolean;
@@ -545,15 +822,13 @@ function PasswordInput({
 }
 
 function ToggleItem({
-  title,
-  description,
-  defaultChecked = false,
+  title, description, checked, onChange,
 }: {
   title: string;
   description: string;
-  defaultChecked?: boolean;
+  checked: boolean;
+  onChange: () => void;
 }) {
-  const [checked, setChecked] = useState(defaultChecked);
   return (
     <div className="flex items-center justify-between p-6 hover:bg-bg-secondary transition-colors">
       <div>
@@ -561,64 +836,25 @@ function ToggleItem({
         <p className="text-sm text-text-secondary">{description}</p>
       </div>
       <button
-        onClick={() => setChecked(!checked)}
+        onClick={onChange}
         className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${checked ? "bg-primary" : "bg-bg-tertiary"}`}
       >
-        <span
-          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${checked ? "translate-x-5" : "translate-x-0"}`}
-        />
+        <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${checked ? "translate-x-5" : "translate-x-0"}`} />
       </button>
     </div>
   );
 }
 
-function ThemeCard({
-  label,
-  active = false,
-  dark = false,
+function ColorSwatch({
+  color, active = false, onClick,
 }: {
-  label: string;
+  color: string;
   active?: boolean;
-  dark?: boolean;
+  onClick: () => void;
 }) {
   return (
-    <div className="cursor-pointer group">
-      <div
-        className={`aspect-video rounded-xl border-2 overflow-hidden relative p-3 transition-all ${
-          active
-            ? "border-primary ring-4 ring-primary/10"
-            : "border-transparent hover:border-bg-tertiary"
-        } ${dark ? "bg-text-primary" : "bg-bg-secondary"}`}
-      >
-        <div
-          className={`w-full h-2 rounded-full mb-2 ${dark ? "bg-bg-tertiary/20" : "bg-bg-tertiary"}`}
-        />
-        <div className="flex gap-2">
-          <div
-            className={`w-1/3 h-12 rounded shadow-sm ${dark ? "bg-bg-tertiary/10" : "bg-bg-primary"}`}
-          />
-          <div
-            className={`w-2/3 h-12 rounded shadow-sm ${dark ? "bg-bg-tertiary/10" : "bg-bg-primary"}`}
-          />
-        </div>
-        {active && (
-          <div className="absolute inset-0 bg-primary/5 flex items-center justify-center">
-            <CheckCircle2 className="text-primary fill-white" size={24} />
-          </div>
-        )}
-      </div>
-      <p
-        className={`text-center mt-2 text-sm font-bold ${active ? "text-primary" : "text-text-secondary group-hover:text-text-primary"}`}
-      >
-        {label}
-      </p>
-    </div>
-  );
-}
-
-function ColorSwatch({ color, active = false }: { color: string; active?: boolean }) {
-  return (
     <button
+      onClick={onClick}
       className={`w-8 h-8 rounded-full transition-all hover:scale-110 ${active ? "ring-2 ring-offset-2 ring-primary" : ""}`}
       style={{ backgroundColor: color }}
     />
@@ -626,10 +862,7 @@ function ColorSwatch({ color, active = false }: { color: string; active?: boolea
 }
 
 function SessionItem({
-  icon: Icon,
-  title,
-  details,
-  current = false,
+  icon: Icon, title, details, current = false,
 }: {
   icon: any;
   title: string;
@@ -637,11 +870,7 @@ function SessionItem({
   current?: boolean;
 }) {
   return (
-    <div
-      className={`flex items-center justify-between p-4 rounded-xl border ${
-        current ? "border-primary/20 bg-primary/5" : "border-bg-tertiary bg-bg-primary"
-      }`}
-    >
+    <div className={`flex items-center justify-between p-4 rounded-xl border ${current ? "border-primary/20 bg-primary/5" : "border-bg-tertiary bg-bg-primary"}`}>
       <div className="flex items-center gap-4">
         <Icon className="text-text-muted" size={24} />
         <div>
@@ -650,44 +879,10 @@ function SessionItem({
         </div>
       </div>
       {current ? (
-        <span className="text-xs font-bold text-primary uppercase tracking-widest px-2 py-1 bg-primary/10 rounded">
-          Current
-        </span>
+        <span className="text-xs font-bold text-primary uppercase tracking-widest px-2 py-1 bg-primary/10 rounded">Current</span>
       ) : (
-        <button className="text-xs font-bold text-red-500 hover:bg-red-50 px-3 py-1 rounded transition-colors uppercase tracking-widest">
-          Revoke
-        </button>
+        <button className="text-xs font-bold text-red-500 hover:bg-red-50 px-3 py-1 rounded transition-colors uppercase tracking-widest">Revoke</button>
       )}
     </div>
-  );
-}
-
-function ApiKeyRow({
-  name,
-  keyStr,
-  date,
-  lastUsed,
-}: {
-  name: string;
-  keyStr: string;
-  date: string;
-  lastUsed: string;
-}) {
-  return (
-    <tr className="hover:bg-bg-secondary transition-colors">
-      <td className="px-6 py-4">
-        <p className="font-bold text-sm text-text-primary">{name}</p>
-        <code className="text-[10px] bg-bg-tertiary px-2 py-0.5 rounded text-text-secondary font-mono">
-          {keyStr}
-        </code>
-      </td>
-      <td className="px-6 py-4 text-sm text-text-secondary">{date}</td>
-      <td className="px-6 py-4 text-sm text-text-secondary">{lastUsed}</td>
-      <td className="px-6 py-4 text-right">
-        <button className="text-red-500 hover:bg-red-50 p-2 rounded transition-colors">
-          <Trash2 size={18} />
-        </button>
-      </td>
-    </tr>
   );
 }

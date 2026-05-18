@@ -73,6 +73,7 @@ export interface Profile {
   bio?: string;
   location?: string;
   socials?: Record<string, string>;
+  preferences?: Record<string, any>;
   academicInfo?: AcademicInfo;
   createdAt: string;
   updatedAt: string;
