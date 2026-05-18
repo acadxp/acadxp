@@ -71,6 +71,7 @@ export default function CreateCoursePage() {
     similarCourses,
     gamificationData,
     error,
+    wasEnrollment,
     startFlow,
     confirmBlueprint,
     enrollExisting,
@@ -139,8 +140,14 @@ export default function CreateCoursePage() {
             <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-6">
               <Check className="w-8 h-8 text-green-600" />
             </div>
-            <h1 className="text-2xl font-bold text-text-primary mb-2">Course Created!</h1>
-            <p className="text-text-muted mb-8">Your course has been created and you&apos;re enrolled.</p>
+            <h1 className="text-2xl font-bold text-text-primary mb-2">
+              {wasEnrollment ? "Enrolled Successfully!" : "Course Created!"}
+            </h1>
+            <p className="text-text-muted mb-8">
+              {wasEnrollment
+                ? "You have been enrolled in the course."
+                : "Your course has been created and you&apos;re enrolled."}
+            </p>
             <div className="flex gap-4">
               <Link
                 href="/courses"
@@ -148,12 +155,14 @@ export default function CreateCoursePage() {
               >
                 Go to My Courses
               </Link>
-              <button
-                onClick={() => { reset(); }}
-                className="px-6 py-2.5 rounded-xl border border-bg-tertiary text-text-primary text-sm font-semibold hover:bg-bg-secondary transition-all"
-              >
-                Create Another
-              </button>
+              {!wasEnrollment && (
+                <button
+                  onClick={() => { reset(); }}
+                  className="px-6 py-2.5 rounded-xl border border-bg-tertiary text-text-primary text-sm font-semibold hover:bg-bg-secondary transition-all"
+                >
+                  Create Another
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -198,6 +207,13 @@ export default function CreateCoursePage() {
                 ))}
               </div>
             </Card.Content>
+            {error && (
+              <Card.Footer>
+                <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3">
+                  <p className="text-sm text-red-600">{error}</p>
+                </div>
+              </Card.Footer>
+            )}
             <Card.Footer>
               <button
                 onClick={handleRetry}
@@ -399,7 +415,7 @@ export default function CreateCoursePage() {
               {workflow === "SEARCHING" && "Checking for existing courses..."}
               {workflow === "CREATING" && "Creating your course..."}
               {workflow === "GENERATING_BLUEPRINT" && "Generating AI gamification blueprint..."}
-              {workflow === "CONFIRMING" && "Confirming blueprint..."}
+              {workflow === "CONFIRMING" && (wasEnrollment ? "Enrolling in course..." : "Confirming blueprint...")}
             </p>
           </div>
         )}

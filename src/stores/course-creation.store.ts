@@ -15,6 +15,7 @@ interface CourseCreationState {
   createdCourse: Course | null;
   gamificationData: GamificationData | null;
   error: string | null;
+  wasEnrollment: boolean;
 
   startFlow: (formData: {
     courseCode: string;
@@ -41,6 +42,7 @@ export const useCourseCreationStore = create<CourseCreationState>((set, get) => 
   createdCourse: null,
   gamificationData: null,
   error: null,
+  wasEnrollment: false,
 
   startFlow: async (formData) => {
     const { courseCode, title, description, xp, department, academicLevel } = formData;
@@ -102,9 +104,10 @@ export const useCourseCreationStore = create<CourseCreationState>((set, get) => 
     set({ workflow: "CONFIRMING", error: null });
     try {
       await courseService.enroll(courseId);
-      set({ workflow: "SUCCESS" });
-    } catch {
-      set({ error: "Could not enroll in course", workflow: "DUPLICATE_FOUND" });
+      set({ workflow: "SUCCESS", wasEnrollment: true });
+    } catch (err: any) {
+      const message = err?.response?.data?.message || "Could not enroll in course";
+      set({ error: message, workflow: "DUPLICATE_FOUND" });
     }
   },
 
@@ -114,5 +117,6 @@ export const useCourseCreationStore = create<CourseCreationState>((set, get) => 
     createdCourse: null,
     gamificationData: null,
     error: null,
+    wasEnrollment: false,
   }),
 }));
