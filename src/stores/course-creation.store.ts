@@ -89,7 +89,15 @@ export const useCourseCreationStore = create<CourseCreationState>((set, get) => 
         }),
         minDelay(1200),
       ]);
-      set({ gamificationData: result.data.data!, workflow: "REVIEWING_BLUEPRINT" });
+      const rawData = result.data.data!;
+      const normalizedData = {
+        ...rawData,
+        badges: rawData.badges.map((b) => {
+          const badge = b as any;
+          return { ...b, xpValue: badge.xpValue ?? badge.xpReward ?? 0 };
+        }),
+      };
+      set({ gamificationData: normalizedData, workflow: "REVIEWING_BLUEPRINT" });
     } catch {
       set({ error: "Blueprint generation failed. Retry?", workflow: "IDLE" });
     }
