@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { User, Settings, LogOut } from "lucide-react";
-import { logoutUser } from "@/lib/api";
+import { authService } from "@/services/auth.service";
 import { navItems } from "@/lib/utils";
 
 const userLinks = [
@@ -27,7 +27,7 @@ export default function MobileMenu({ user, onClose }: MobileMenuProps) {
 
   const handleLogout = () => {
     onClose();
-    logoutUser();
+    authService.logout();
     router.push("/login");
   };
 

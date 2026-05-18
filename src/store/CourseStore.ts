@@ -1,14 +1,6 @@
 import { create } from "zustand";
 import type { CourseState, Course, CreateCoursePayload, SearchCoursePayload } from "../types/course";
-import useAuthStore from "./AuthStore";
-import {
-  getAllCourses,
-  getCourseById,
-  getEnrolledCourses,
-  createCourse as createCourseApi,
-  searchCourses as searchCoursesApi,
-  deleteCourse as deleteCourseApi,
-} from "../lib/api";
+import { courseService } from "@/services/course.service";
 
 const initialState = {
   courses: [],
@@ -28,9 +20,9 @@ const useCourseStore = create<CourseState>()((set) => ({
   fetchAllCourses: async () => {
     set({ loading: true, error: null });
     try {
-      const response = await getAllCourses();
+      const { data } = await courseService.getAll();
       set({
-        courses: Array.isArray(response) ? response : (response.courses ?? []),
+        courses: data.data ?? [],
         loading: false,
       });
     } catch (err) {
@@ -42,10 +34,8 @@ const useCourseStore = create<CourseState>()((set) => ({
   fetchEnrolledCourses: async () => {
     set({ loading: true, error: null });
     try {
-      const token = useAuthStore.getState().accessToken;
-      if (!token) throw new Error("No authentication token found");
-      const response = await getEnrolledCourses(token);
-      const enrollments = Array.isArray(response) ? response : (response.enrollments ?? []);
+      const { data } = await courseService.getEnrollments();
+      const enrollments = data.data ?? [];
       set({
         courses: enrollments.map((e: { course: Course }) => e.course),
         loading: false,
@@ -59,10 +49,9 @@ const useCourseStore = create<CourseState>()((set) => ({
   fetchCourseById: async (id: string) => {
     set({ loading: true, error: null, currentCourse: null });
     try {
-      const response = await getCourseById(id);
-      const course = (response as { data?: unknown }).data ?? response;
+      const { data } = await courseService.getById(id);
       set({
-        currentCourse: course as Course,
+        currentCourse: data.data ?? null,
         loading: false,
       });
     } catch (err) {
@@ -74,7 +63,8 @@ const useCourseStore = create<CourseState>()((set) => ({
   createCourse: async (payload: CreateCoursePayload) => {
     set({ loading: true, error: null });
     try {
-      const course = await createCourseApi(payload);
+      const { data } = await courseService.create(payload);
+      const course = data.data!;
       set((state) => ({ courses: [...state.courses, course], loading: false }));
       return course;
     } catch (err) {
@@ -87,8 +77,8 @@ const useCourseStore = create<CourseState>()((set) => ({
   searchCourses: async (payload: SearchCoursePayload) => {
     set({ loading: true, error: null });
     try {
-      const response = await searchCoursesApi(payload);
-      set({ courses: response.courses, loading: false });
+      const { data } = await courseService.search(payload);
+      set({ courses: data.data?.courses ?? [], loading: false });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to search courses";
       set({ error: message, loading: false });
@@ -98,7 +88,7 @@ const useCourseStore = create<CourseState>()((set) => ({
   deleteCourse: async (id: string) => {
     set({ loading: true, error: null });
     try {
-      await deleteCourseApi(id);
+      await courseService.delete(id);
       set((state) => ({
         courses: state.courses.filter((c) => c.id !== id),
         loading: false,
