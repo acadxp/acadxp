@@ -1,0 +1,153 @@
+import { create } from "zustand";
+import { courseService } from "@/services/course.service";
+import type {
+  Course,
+  CourseCreationWorkflow,
+  GamificationData,
+  GeneratedSkill,
+  GeneratedChallenge,
+  GeneratedBadge,
+} from "@/types";
+
+const minDelay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+interface CourseCreationState {
+  workflow: CourseCreationWorkflow;
+  similarCourses: Course[];
+  createdCourse: Course | null;
+  gamificationData: GamificationData | null;
+  error: string | null;
+  wasEnrollment: boolean;
+
+  startFlow: (formData: {
+    courseCode: string;
+    title: string;
+    description?: string;
+    xp: number;
+    department: string;
+    academicLevel: string;
+  }) => Promise<void>;
+
+  confirmBlueprint: (payload: {
+    selectedSkills: GeneratedSkill[];
+    selectedChallenges: GeneratedChallenge[];
+    selectedBadges?: GeneratedBadge[];
+  }) => Promise<void>;
+
+  enrollExisting: (courseId: string) => Promise<void>;
+  reset: () => void;
+}
+
+export const useCourseCreationStore = create<CourseCreationState>((set, get) => ({
+  workflow: "IDLE",
+  similarCourses: [],
+  createdCourse: null,
+  gamificationData: null,
+  error: null,
+  wasEnrollment: false,
+
+  startFlow: async (formData) => {
+    const { courseCode, title, description, xp, department, academicLevel } = formData;
+    set({ error: null });
+
+    set({ workflow: "SEARCHING" });
+    try {
+      const searchResult = await courseService.search({ title, courseCode });
+      const similar = searchResult.data.data?.courses ?? [];
+
+      if (similar.length > 0) {
+        set({ similarCourses: similar, workflow: "DUPLICATE_FOUND" });
+        return;
+      }
+    } catch (err) {
+      console.error("Search error:", err);
+      set({ workflow: "IDLE" });
+      return;
+    }
+
+    set({ workflow: "CREATING" });
+    let course: Course;
+    try {
+      const [result] = await Promise.all([
+        courseService.create({ courseCode, title, description, xp, department }),
+        minDelay(1200),
+      ]);
+      course = result.data.data!;
+      set({ createdCourse: course });
+    } catch {
+      set({ error: "Failed to create course", workflow: "IDLE" });
+      return;
+    }
+
+    set({ workflow: "GENERATING_BLUEPRINT" });
+    try {
+      const [result] = await Promise.all([
+        courseService.generateBlueprint(course.id, {
+          courseTitle: title,
+          courseDescription: description || "No description provided",
+          academicLevel,
+        }),
+        minDelay(1200),
+      ]);
+      const rawData = result.data.data!;
+      const normalizedData = {
+        ...rawData,
+        badges: rawData.badges.map((b) => {
+          const badge = b as any;
+          return { ...b, xpValue: badge.xpValue ?? badge.xpReward ?? 0 };
+        }),
+      };
+      set({ gamificationData: normalizedData, workflow: "REVIEWING_BLUEPRINT" });
+    } catch {
+      set({ error: "Blueprint generation failed. Retry?", workflow: "IDLE" });
+    }
+  },
+
+  confirmBlueprint: async (payload) => {
+    const course = get().createdCourse;
+    if (!course) return;
+
+    const normalizedPayload = {
+      ...payload,
+      selectedBadges: (payload.selectedBadges ?? []).map((b) => {
+        const badge = b as any;
+        return { ...b, xpValue: badge.xpValue ?? badge.xpReward ?? 0 };
+      }),
+    };
+
+    set({ workflow: "CONFIRMING", error: null });
+    try {
+      await Promise.all([
+        courseService.confirmBlueprint(course.id, normalizedPayload),
+        minDelay(1500),
+      ]);
+      set({ workflow: "SUCCESS", gamificationData: null });
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || "Failed to confirm blueprint";
+      set({ error: msg, workflow: "REVIEWING_BLUEPRINT" });
+    }
+  },
+
+  enrollExisting: async (courseId) => {
+    set({ workflow: "CONFIRMING", error: null });
+    try {
+      await Promise.all([
+        courseService.enroll(courseId),
+        minDelay(1500),
+      ]);
+      set({ workflow: "SUCCESS", wasEnrollment: true });
+    } catch (err: unknown) {
+      const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || "Could not enroll in course";
+      set({ error: message, workflow: "DUPLICATE_FOUND" });
+    }
+  },
+
+  reset: () => set({
+    workflow: "IDLE",
+    similarCourses: [],
+    createdCourse: null,
+    gamificationData: null,
+    error: null,
+    wasEnrollment: false,
+  }),
+}));

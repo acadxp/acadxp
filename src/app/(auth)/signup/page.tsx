@@ -6,17 +6,14 @@ import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
 import Image from "next/image";
-import { checkEmailAvailability, registerUser } from "@/lib/api";
-import type { RegisterUserPayload } from "../../../types/user";
-import useAuthStore from "@/store/AuthStore";
-import { AxiosError } from "axios";
+import { useAuthStore } from "@/stores/auth.store";
+import { authService } from "@/services/auth.service";
 
 const schema = z
   .object({
     name: z.string().min(2, "Name must be at least 2 characters"),
-    email: z.email("Invalid email address"),
+    email: z.string().email("Invalid email address"),
     password: z.string().min(8, "Password must be at least 8 characters"),
     confirmPassword: z.string(),
   })
@@ -29,8 +26,8 @@ type FormValues = z.infer<typeof schema>;
 
 export default function SignupPage() {
   const router = useRouter();
-  const { setUser, setAccessToken, error, setAuthError, loading } =
-    useAuthStore();
+  const { register: signup, isLoading, error } = useAuthStore();
+
   const {
     register,
     handleSubmit,
@@ -48,55 +45,28 @@ export default function SignupPage() {
       confirmPassword: "",
     },
   });
-  const signupMutation = useMutation({
-    mutationFn: async (payload: RegisterUserPayload) => {
-      return await registerUser(payload);
-    },
-    onSuccess: (data) => {
-      setAuthError(null);
-      setUser(data.user);
-      setAccessToken(data.accessToken);
-      router.push("/dashboard");
-    },
-    onError: (error: any) => {
-      setAuthError(
-        error.response?.data?.message || "An error occurred during signup.",
-      );
-    },
-  });
 
-  // Email uniqueness check on blur
   const handleEmailBlur = async () => {
     const email = getValues("email").trim();
     if (!email) return;
     try {
-      const available = await checkEmailAvailability(email);
-      if (!available) {
-        setError("email", {
-          type: "manual",
-          message: "Email is already in use.",
-        });
-      } else {
-        clearErrors("email");
-      }
-    } catch (err: unknown) {
-      const msg =
-        err instanceof AxiosError
-          ? err.response?.data?.message
-          : "Could not verify email.";
+      await authService.checkEmail(email);
+      clearErrors("email");
+    } catch {
       setError("email", {
         type: "manual",
-        message: msg,
+        message: "Email is already in use.",
       });
     }
   };
 
-  const onSubmit = (vals: FormValues) => {
-    signupMutation.mutate({
-      name: vals.name.trim(),
-      email: vals.email.trim(),
-      password: vals.password,
-    });
+  const onSubmit = async (vals: FormValues) => {
+    try {
+      await signup(vals.name.trim(), vals.email.trim(), vals.password);
+      router.push("/dashboard");
+    } catch {
+      // error is set in the store
+    }
   };
 
   return (
@@ -138,7 +108,7 @@ export default function SignupPage() {
                 id="name"
                 type="text"
                 {...register("name")}
-                className="w-full px-4 py-3 rounded-lg  border border-primary text-text-primary placeholder-text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                className="w-full px-4 py-3 rounded-lg border border-primary text-text-primary placeholder-text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                 placeholder="John Doe"
                 autoComplete="name"
               />
@@ -159,7 +129,7 @@ export default function SignupPage() {
                 id="email"
                 type="email"
                 {...register("email")}
-                className="w-full px-4 py-3 rounded-lg  border border-primary text-text-primary placeholder-text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                className="w-full px-4 py-3 rounded-lg border border-primary text-text-primary placeholder-text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                 placeholder="name@company.com"
                 autoComplete="email"
                 onBlur={handleEmailBlur}
@@ -181,7 +151,7 @@ export default function SignupPage() {
                 id="password"
                 type="password"
                 {...register("password")}
-                className="w-full px-4 py-3 rounded-lg  border border-primary text-text-primary placeholder-text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                className="w-full px-4 py-3 rounded-lg border border-primary text-text-primary placeholder-text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                 placeholder="••••••••"
                 autoComplete="new-password"
               />
@@ -203,7 +173,7 @@ export default function SignupPage() {
                 id="confirmPassword"
                 type="password"
                 {...register("confirmPassword")}
-                className="w-full px-4 py-3 rounded-lg  border border-primary text-text-primary placeholder-text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                className="w-full px-4 py-3 rounded-lg border border-primary text-text-primary placeholder-text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                 placeholder="••••••••"
                 autoComplete="new-password"
               />
@@ -219,9 +189,9 @@ export default function SignupPage() {
             <Button
               className="mt-4 w-full cursor-pointer"
               type="submit"
-              disabled={loading}
+              disabled={isLoading}
             >
-              {loading ? "Creating..." : "Create Account"}
+              {isLoading ? "Creating..." : "Create Account"}
             </Button>
           </form>
           <div className="text-center">
