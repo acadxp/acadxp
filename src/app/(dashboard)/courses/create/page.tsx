@@ -10,7 +10,7 @@ import { useCourseCreationStore } from "@/stores/course-creation.store";
 import { Department } from "@/types";
 import { CourseCard } from "@/components/courses/course-card";
 import type { GeneratedSkill, GeneratedChallenge, GeneratedBadge } from "@/types";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "motion/react";
 
 const createCourseSchema = z.object({
@@ -66,7 +66,8 @@ function CreationStepper({ workflow }: { workflow: string }) {
 }
 
 function GeneratingScreen({ workflow }: { workflow: string }) {
-  const [progress, setProgress] = useState(0);
+  const [activeProgress, setActiveProgress] = useState(0);
+  const completedRef = useRef<Set<string>>(new Set());
   const steps = [
     { key: "CREATING", label: "Creating course...", icon: Sparkles },
     { key: "GENERATING_BLUEPRINT", label: "Generating skills...", icon: Brain },
@@ -77,19 +78,25 @@ function GeneratingScreen({ workflow }: { workflow: string }) {
 
   useEffect(() => {
     if (currentStepIdx >= 0) {
-      setProgress(0);
+      steps.slice(0, currentStepIdx).forEach((s) => completedRef.current.add(s.key));
+      setActiveProgress(0);
       const timer = setInterval(() => {
-        setProgress((prev) => {
+        setActiveProgress((prev) => {
           if (prev >= 90) {
             clearInterval(timer);
             return 90;
           }
-          return prev + 3;
+          return prev + 2;
         });
-      }, 80);
+      }, 100);
       return () => clearInterval(timer);
     }
   }, [currentStepIdx]);
+
+  useEffect(() => {
+    completedRef.current = new Set();
+    setActiveProgress(0);
+  }, []);
 
   const phaseTitle =
     workflow === "CREATING" ? "Creating your course..."
@@ -115,8 +122,8 @@ function GeneratingScreen({ workflow }: { workflow: string }) {
         </div>
         <div className="space-y-6">
           {steps.map((step, i) => {
+            const isComplete = i < currentStepIdx || completedRef.current.has(step.key);
             const isActive = i === currentStepIdx;
-            const isComplete = i < currentStepIdx;
             const Icon = step.icon;
             return (
               <div key={step.key} className={`flex items-center gap-4 group ${i > currentStepIdx ? "opacity-50" : ""}`}>
@@ -131,13 +138,13 @@ function GeneratingScreen({ workflow }: { workflow: string }) {
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-sm font-medium text-text-primary">{step.label}</span>
                     <span className="text-[10px] font-bold text-text-muted">
-                      {isComplete ? "COMPLETE" : isActive ? `${Math.min(progress, 100)}%` : "QUEUED"}
+                      {isComplete ? "COMPLETE" : isActive ? `${Math.min(activeProgress, 100)}%` : "QUEUED"}
                     </span>
                   </div>
                   <div className="h-1.5 w-full bg-bg-tertiary rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-primary rounded-full transition-all duration-300"
-                      style={{ width: isComplete ? "100%" : isActive ? `${progress}%` : "0%" }}
+                      className="h-full bg-primary rounded-full transition-all duration-500"
+                      style={{ width: isComplete ? "100%" : isActive ? `${activeProgress}%` : "0%" }}
                     ></div>
                   </div>
                 </div>
@@ -250,7 +257,7 @@ function ReviewScreen({
                   </div>
                   <p className="text-sm text-text-secondary line-clamp-2 mb-4">{skill.description}</p>
                   <span className="text-[10px] font-bold text-primary bg-bg-tertiary px-2 py-1 rounded">
-                    {skill.xpValue.toLocaleString()} XP
+                    {(skill.xpValue ?? 0).toLocaleString()} XP
                   </span>
                 </div>
               );
@@ -340,7 +347,7 @@ function ReviewScreen({
                     </div>
                   </div>
                   <span className="text-[10px] font-bold text-primary bg-bg-tertiary px-2 py-1 rounded">
-                    {badge.xpValue.toLocaleString()} XP
+                    {(badge.xpValue ?? 0).toLocaleString()} XP
                   </span>
                 </div>
               );

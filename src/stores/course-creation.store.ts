@@ -9,6 +9,8 @@ import type {
   GeneratedBadge,
 } from "@/types";
 
+const minDelay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 interface CourseCreationState {
   workflow: CourseCreationWorkflow;
   similarCourses: Course[];
@@ -66,8 +68,11 @@ export const useCourseCreationStore = create<CourseCreationState>((set, get) => 
     set({ workflow: "CREATING" });
     let course: Course;
     try {
-      const { data } = await courseService.create({ courseCode, title, description, xp, department });
-      course = data.data!;
+      const [result] = await Promise.all([
+        courseService.create({ courseCode, title, description, xp, department }),
+        minDelay(1200),
+      ]);
+      course = result.data.data!;
       set({ createdCourse: course });
     } catch {
       set({ error: "Failed to create course", workflow: "IDLE" });
@@ -76,12 +81,15 @@ export const useCourseCreationStore = create<CourseCreationState>((set, get) => 
 
     set({ workflow: "GENERATING_BLUEPRINT" });
     try {
-      const { data } = await courseService.generateBlueprint(course.id, {
-        courseTitle: title,
-        courseDescription: description || "No description provided",
-        academicLevel,
-      });
-      set({ gamificationData: data.data!, workflow: "REVIEWING_BLUEPRINT" });
+      const [result] = await Promise.all([
+        courseService.generateBlueprint(course.id, {
+          courseTitle: title,
+          courseDescription: description || "No description provided",
+          academicLevel,
+        }),
+        minDelay(1200),
+      ]);
+      set({ gamificationData: result.data.data!, workflow: "REVIEWING_BLUEPRINT" });
     } catch {
       set({ error: "Blueprint generation failed. Retry?", workflow: "IDLE" });
     }
@@ -93,7 +101,10 @@ export const useCourseCreationStore = create<CourseCreationState>((set, get) => 
 
     set({ workflow: "CONFIRMING", error: null });
     try {
-      await courseService.confirmBlueprint(course.id, payload);
+      await Promise.all([
+        courseService.confirmBlueprint(course.id, payload),
+        minDelay(1500),
+      ]);
       set({ workflow: "SUCCESS", gamificationData: null });
     } catch {
       set({ error: "Failed to confirm blueprint", workflow: "REVIEWING_BLUEPRINT" });
@@ -103,7 +114,10 @@ export const useCourseCreationStore = create<CourseCreationState>((set, get) => 
   enrollExisting: async (courseId) => {
     set({ workflow: "CONFIRMING", error: null });
     try {
-      await courseService.enroll(courseId);
+      await Promise.all([
+        courseService.enroll(courseId),
+        minDelay(1500),
+      ]);
       set({ workflow: "SUCCESS", wasEnrollment: true });
     } catch (err: unknown) {
       const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || "Could not enroll in course";
