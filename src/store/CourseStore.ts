@@ -60,8 +60,9 @@ const useCourseStore = create<CourseState>()((set) => ({
     set({ loading: true, error: null, currentCourse: null });
     try {
       const response = await getCourseById(id);
+      const course = (response as { data?: unknown }).data ?? response;
       set({
-        currentCourse: response.course ?? response,
+        currentCourse: course as Course,
         loading: false,
       });
     } catch (err) {
