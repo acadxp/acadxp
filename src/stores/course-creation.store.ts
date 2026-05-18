@@ -105,8 +105,8 @@ export const useCourseCreationStore = create<CourseCreationState>((set, get) => 
     try {
       await courseService.enroll(courseId);
       set({ workflow: "SUCCESS", wasEnrollment: true });
-    } catch (err: any) {
-      const message = err?.response?.data?.message || "Could not enroll in course";
+    } catch (err: unknown) {
+      const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || "Could not enroll in course";
       set({ error: message, workflow: "DUPLICATE_FOUND" });
     }
   },
