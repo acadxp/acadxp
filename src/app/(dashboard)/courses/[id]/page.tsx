@@ -1,21 +1,22 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useEffect } from "react";
-import { Card, Chip, Avatar, Breadcrumbs } from "@heroui/react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Zap } from "lucide-react";
+import { ArrowLeft, Brain, Zap, BookOpen } from "lucide-react";
 import useCourseStore from "@/store/CourseStore";
 import { formatEnum } from "@/components/courses/course-utils";
-import { DetailRow } from "@/components/courses/detail-row";
 import { CourseDetailSkeleton } from "@/components/courses/course-detail-skeleton";
 import { CourseDetailError } from "@/components/courses/course-detail-error";
+import { motion } from "motion/react";
+
+const tabs = ["Overview", "Skills"];
 
 export default function CourseDetailPage() {
   const params = useParams();
   const id = params?.id as string;
-  const { currentCourse: course, loading, error, fetchCourseById } =
-    useCourseStore();
+  const { currentCourse: course, loading, error, fetchCourseById } = useCourseStore();
+  const [activeTab, setActiveTab] = useState("Overview");
 
   useEffect(() => {
     if (id) fetchCourseById(id);
@@ -25,116 +26,167 @@ export default function CourseDetailPage() {
   if (error) return <CourseDetailError message={error} />;
   if (!course) return null;
 
-  const statusColor = {
-    ACTIVE: "success" as const,
-    INACTIVE: "default" as const,
-    ARCHIVED: "warning" as const,
-    DRAFT: "default" as const,
-  }[course.status];
+  const circumference = 2 * Math.PI * 58;
 
   return (
-    <div className="w-full min-h-screen bg-bg-secondary px-4 py-6 lg:px-10 lg:py-8">
-      <div className="max-w-4xl mx-auto space-y-6">
-        <Breadcrumbs.Root>
-          <Breadcrumbs.Item href="/dashboard">Dashboard</Breadcrumbs.Item>
-          <Breadcrumbs.Item href="/courses">Courses</Breadcrumbs.Item>
-          <Breadcrumbs.Item>{course.title}</Breadcrumbs.Item>
-        </Breadcrumbs.Root>
-
-        <Link
-          href="/courses"
-          className="inline-flex items-center gap-1.5 text-sm text-text-muted hover:text-text-primary transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to courses
-        </Link>
-
-        <Card.Root variant="default" className="w-full">
-          <Card.Header className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
-            <Avatar.Root size="lg" color="accent" variant="soft">
-              <Avatar.Fallback className="text-lg font-bold">
-                {course.title.charAt(0).toUpperCase()}
-              </Avatar.Fallback>
-            </Avatar.Root>
-            <div className="flex-1 space-y-1">
-              <div className="flex items-center gap-3 flex-wrap">
-                <Card.Title className="text-2xl font-bold text-text-primary">
-                  {course.title}
-                </Card.Title>
-                <Chip.Root variant="soft" size="sm">
-                  <Chip.Label>{course.courseCode}</Chip.Label>
-                </Chip.Root>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="min-h-screen bg-bg-secondary"
+    >
+      {/* Hero Banner */}
+      <section className="bg-text-primary text-white py-12 px-4 lg:px-10 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10 pointer-events-none">
+          <div className="absolute top-[-50%] right-[-10%] w-[600px] h-[600px] bg-white rounded-full blur-[120px]"></div>
+        </div>
+        <div className="relative z-10 max-w-6xl mx-auto">
+          <Link
+            href="/courses"
+            className="inline-flex items-center gap-1.5 text-white/60 hover:text-white text-sm mb-6 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to courses
+          </Link>
+          <div className="flex items-center gap-3 mb-4">
+            <span className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
+              {formatEnum(course.department)}
+            </span>
+            <span className="text-white/60 text-xs font-medium">{course.courseCode}</span>
+          </div>
+          <div className="flex justify-between items-start flex-col lg:flex-row gap-6">
+            <div className="max-w-2xl">
+              <h2 className="text-[32px] font-semibold tracking-tight leading-tight mb-3">
+                {course.title}
+              </h2>
+              <p className="text-white/70 text-base leading-relaxed mb-8">
+                {course.description || "No description available."}
+              </p>
+              <div className="flex flex-wrap items-center gap-8">
+                <div>
+                  <p className="text-white/50 text-[10px] uppercase font-bold tracking-widest mb-1">Total XP</p>
+                  <p className="text-xl font-bold tracking-tighter flex items-center gap-2">
+                    <Zap className="w-5 h-5 text-amber-400" />
+                    {course.xp.toLocaleString()}
+                  </p>
+                </div>
+                <div className="w-px h-8 bg-white/10"></div>
+                <div>
+                  <p className="text-white/50 text-[10px] uppercase font-bold tracking-widest mb-1">Status</p>
+                  <p className="text-lg font-medium tracking-tight">{formatEnum(course.status)}</p>
+                </div>
+                <div className="w-px h-8 bg-white/10"></div>
+                <div>
+                  <p className="text-white/50 text-[10px] uppercase font-bold tracking-widest mb-1">Created</p>
+                  <p className="text-lg font-medium tracking-tight">{new Date(course.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p>
+                </div>
               </div>
-              <Card.Description className="text-text-secondary">
-                {formatEnum(course.department)} &middot;{" "}
-                {formatEnum(course.status)}
-              </Card.Description>
             </div>
-            <Chip.Root color={statusColor} variant="soft" size="sm">
-              <Chip.Label>{formatEnum(course.status)}</Chip.Label>
-            </Chip.Root>
-          </Card.Header>
-        </Card.Root>
+          </div>
+        </div>
+      </section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            <Card.Root variant="default">
-              <Card.Header>
-                <Card.Title className="text-lg font-semibold text-text-primary">
-                  About This Course
-                </Card.Title>
-              </Card.Header>
-              <Card.Content>
-                <p className="text-text-secondary leading-relaxed">
-                  {course.description || "No description provided."}
-                </p>
-              </Card.Content>
-            </Card.Root>
+      {/* Main Layout Grid */}
+      <div className="max-w-6xl mx-auto px-4 lg:px-10 py-10 grid grid-cols-1 lg:grid-cols-[65%_35%] gap-10">
+        {/* Left Column */}
+        <div className="space-y-8">
+          <div className="flex gap-8 border-b border-bg-tertiary">
+            {tabs.map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`pb-4 text-sm font-medium transition-all ${
+                  activeTab === tab
+                    ? "text-primary border-b-2 border-primary"
+                    : "text-text-secondary hover:text-text-primary"
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
           </div>
 
-          <div className="space-y-6">
-            <Card.Root variant="default">
-              <Card.Content className="flex flex-col items-center py-8">
-                <div className="flex items-center gap-2 mb-2">
-                  <Zap className="w-5 h-5 text-amber-500" />
-                  <span className="text-3xl font-bold text-text-primary">
-                    {course.xp}
-                  </span>
+          {activeTab === "Overview" && (
+            <section className="space-y-10">
+              <div className="bg-bg-primary p-8 rounded-xl border border-bg-tertiary">
+                <div className="flex justify-between items-end mb-4">
+                  <h3 className="text-xs font-bold uppercase tracking-[0.1em] text-text-secondary">Course Mastery</h3>
+                  <span className="text-xs font-medium text-primary">Total: {course.xp.toLocaleString()} XP</span>
                 </div>
-                <p className="text-sm text-text-muted">Total XP</p>
-              </Card.Content>
-            </Card.Root>
+                <div className="w-full h-3 bg-bg-tertiary rounded-full overflow-hidden mb-3">
+                  <div className="h-full bg-primary w-0 rounded-full"></div>
+                </div>
+                <p className="text-xs text-text-secondary leading-relaxed">
+                  Enroll in this course to start earning XP and track your progress.
+                </p>
+              </div>
 
-            <Card.Root variant="default">
-              <Card.Header>
-                <Card.Title className="text-lg font-semibold text-text-primary">
-                  Course Details
-                </Card.Title>
-              </Card.Header>
-              <Card.Content className="space-y-4">
-                <DetailRow label="Code" value={course.courseCode} />
-                <DetailRow label="Department">
-                  <Chip.Root variant="soft" size="sm">
-                    <Chip.Label>{formatEnum(course.department)}</Chip.Label>
-                  </Chip.Root>
-                </DetailRow>
-                <DetailRow
-                  label="Status"
-                  value={formatEnum(course.status)}
-                />
-                <DetailRow
-                  label="Created"
-                  value={new Date(course.createdAt).toLocaleDateString()}
-                />
-                <DetailRow
-                  label="Updated"
-                  value={new Date(course.updatedAt).toLocaleDateString()}
-                />
-              </Card.Content>
-            </Card.Root>
+              <div>
+                <h3 className="text-lg font-medium mb-4 text-text-primary flex items-center gap-2">
+                  <BookOpen className="w-5 h-5 text-primary" />
+                  About this course
+                </h3>
+                <div className="text-text-secondary leading-relaxed space-y-4 text-sm">
+                  <p>{course.description || "No description provided."}</p>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {activeTab === "Skills" && (
+            <section>
+              <div className="flex items-center gap-2 mb-5">
+                <Brain className="w-5 h-5 text-primary" />
+                <h3 className="text-lg font-medium text-text-primary">Course Skills</h3>
+              </div>
+              <p className="text-sm text-text-muted">Skills will be available once the course blueprint is generated.</p>
+            </section>
+          )}
+        </div>
+
+        {/* Right Column */}
+        <div className="space-y-6">
+          <div className="bg-bg-primary p-8 rounded-xl border border-bg-tertiary text-center">
+            <div className="relative w-32 h-32 mx-auto mb-6">
+              <svg className="w-full h-full transform -rotate-90">
+                <circle className="text-bg-tertiary" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" strokeWidth="8"></circle>
+                <circle className="text-primary" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" strokeDasharray={circumference} strokeDashoffset={circumference} strokeWidth="8" strokeLinecap="round"></circle>
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-2xl font-extrabold tracking-tighter">0%</span>
+                <span className="text-[10px] uppercase font-bold text-text-muted">Progress</span>
+              </div>
+            </div>
+            <h4 className="font-medium text-sm mb-1 text-text-primary">Not Enrolled</h4>
+            <p className="text-xs text-text-muted mb-6">Enroll to start tracking your progress.</p>
+          </div>
+
+          <div className="bg-bg-primary p-6 rounded-xl border border-bg-tertiary">
+            <h4 className="text-xs font-bold uppercase tracking-widest mb-4 text-text-secondary">Course Details</h4>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-text-muted">Code</span>
+                <span className="text-sm font-medium text-text-primary">{course.courseCode}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-text-muted">Department</span>
+                <span className="text-sm font-medium text-text-primary">{formatEnum(course.department)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-text-muted">Status</span>
+                <span className="text-sm font-medium text-primary">{formatEnum(course.status)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-text-muted">Created</span>
+                <span className="text-sm font-medium text-text-primary">{new Date(course.createdAt).toLocaleDateString()}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-text-muted">Updated</span>
+                <span className="text-sm font-medium text-text-primary">{new Date(course.updatedAt).toLocaleDateString()}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
