@@ -2,6 +2,7 @@ import api from "@/lib/axios";
 import type {
   ApiResponse,
   Course,
+  Challenge,
   StudentCourseEnrollment,
   GamificationData,
   GeneratedSkill,
@@ -49,4 +50,10 @@ export const courseService = {
     selectedChallenges: GeneratedChallenge[];
     selectedBadges?: GeneratedBadge[];
   }) => api.post<ApiResponse>("/courses/blueprint/confirm", { courseId, confirmPayload }),
+
+  getChallenge: (courseId: string, challengeId: string) =>
+    api.get<ApiResponse<Challenge & { progress: number; status: string; attempts: number; completedAt: string | null }>>(`/courses/${courseId}/challenges/${challengeId}`),
+
+  getChallenges: (courseId: string) =>
+    api.get<ApiResponse<(Challenge & { progress: number; status: string; attempts: number; isRequired: boolean; order: number })[]>>(`/courses/${courseId}/challenges`),
 };

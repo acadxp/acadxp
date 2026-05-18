@@ -2,7 +2,6 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import {
   LayoutDashboard,
-  Trophy,
   Settings,
   GraduationCap,
   Zap,
@@ -33,7 +32,6 @@ export const getErrorMessage = (error: unknown): string | undefined => {
 export const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
   { icon: GraduationCap, label: "My Courses", href: "/courses" },
-  { icon: Trophy, label: "Challenges", href: "/challenges" },
   { icon: Target, label: "Goals", href: "/goals" },
   { icon: Settings, label: "Settings", href: "/settings" },
 ];
