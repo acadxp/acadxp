@@ -107,15 +107,24 @@ export const useCourseCreationStore = create<CourseCreationState>((set, get) => 
     const course = get().createdCourse;
     if (!course) return;
 
+    const normalizedPayload = {
+      ...payload,
+      selectedBadges: (payload.selectedBadges ?? []).map((b) => {
+        const badge = b as any;
+        return { ...b, xpValue: badge.xpValue ?? badge.xpReward ?? 0 };
+      }),
+    };
+
     set({ workflow: "CONFIRMING", error: null });
     try {
       await Promise.all([
-        courseService.confirmBlueprint(course.id, payload),
+        courseService.confirmBlueprint(course.id, normalizedPayload),
         minDelay(1500),
       ]);
       set({ workflow: "SUCCESS", gamificationData: null });
-    } catch {
-      set({ error: "Failed to confirm blueprint", workflow: "REVIEWING_BLUEPRINT" });
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || "Failed to confirm blueprint";
+      set({ error: msg, workflow: "REVIEWING_BLUEPRINT" });
     }
   },
 

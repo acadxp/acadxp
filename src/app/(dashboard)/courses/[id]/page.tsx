@@ -3,12 +3,14 @@
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Brain, Zap, BookOpen } from "lucide-react";
+import { ArrowLeft, Brain, Zap, BookOpen, Loader2 } from "lucide-react";
 import useCourseStore from "@/store/CourseStore";
+import { courseService } from "@/services/course.service";
 import { formatEnum } from "@/components/courses/course-utils";
 import { CourseDetailSkeleton } from "@/components/courses/course-detail-skeleton";
 import { CourseDetailError } from "@/components/courses/course-detail-error";
 import { motion } from "motion/react";
+import type { StudentCourseEnrollment } from "@/types";
 
 const tabs = ["Overview", "Skills"];
 
@@ -17,10 +19,44 @@ export default function CourseDetailPage() {
   const id = params?.id as string;
   const { currentCourse: course, loading, error, fetchCourseById } = useCourseStore();
   const [activeTab, setActiveTab] = useState("Overview");
+  const [enrollment, setEnrollment] = useState<StudentCourseEnrollment | null>(null);
+  const [enrolling, setEnrolling] = useState(false);
 
   useEffect(() => {
-    if (id) fetchCourseById(id);
+    if (!id) return;
+    fetchCourseById(id);
+    courseService.getEnrollments().then((res) => {
+      const list: StudentCourseEnrollment[] = res.data.data ?? [];
+      const match = list.find((e) => e.courseId === id);
+      setEnrollment(match ?? null);
+    }).catch(() => {});
   }, [id, fetchCourseById]);
+
+  const handleEnroll = async () => {
+    setEnrolling(true);
+    try {
+      const { data } = await courseService.enroll(id);
+      setEnrollment(data.data!);
+    } catch {
+      // ignore
+    } finally {
+      setEnrolling(false);
+    }
+  };
+
+  const handleUnenroll = async () => {
+    setEnrolling(true);
+    try {
+      await courseService.unenroll(id);
+      setEnrollment(null);
+    } catch {
+      // ignore
+    } finally {
+      setEnrolling(false);
+    }
+  };
+
+  const isEnrolled = !!enrollment;
 
   if (loading || (!course && !error)) return <CourseDetailSkeleton />;
   if (error) return <CourseDetailError message={error} />;
@@ -116,7 +152,7 @@ export default function CourseDetailPage() {
                   <div className="h-full bg-primary w-0 rounded-full"></div>
                 </div>
                 <p className="text-xs text-text-secondary leading-relaxed">
-                  Enroll in this course to start earning XP and track your progress.
+                  {isEnrolled ? "You are enrolled. Complete challenges to earn XP and track your progress." : "Enroll in this course to start earning XP and track your progress."}
                 </p>
               </div>
 
@@ -149,15 +185,37 @@ export default function CourseDetailPage() {
             <div className="relative w-32 h-32 mx-auto mb-6">
               <svg className="w-full h-full transform -rotate-90">
                 <circle className="text-bg-tertiary" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" strokeWidth="8"></circle>
-                <circle className="text-primary" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" strokeDasharray={circumference} strokeDashoffset={circumference} strokeWidth="8" strokeLinecap="round"></circle>
+                <circle className="text-primary" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" strokeDasharray={circumference} strokeDashoffset={isEnrolled ? circumference * 0.3 : circumference} strokeWidth="8" strokeLinecap="round"></circle>
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-2xl font-extrabold tracking-tighter">0%</span>
-                <span className="text-[10px] uppercase font-bold text-text-muted">Progress</span>
+                <span className="text-2xl font-extrabold tracking-tighter">
+                  {isEnrolled ? `${enrollment!.xpEarned}` : "0%"}
+                </span>
+                <span className="text-[10px] uppercase font-bold text-text-muted">
+                  {isEnrolled ? "XP EARNED" : "Progress"}
+                </span>
               </div>
             </div>
-            <h4 className="font-medium text-sm mb-1 text-text-primary">Not Enrolled</h4>
-            <p className="text-xs text-text-muted mb-6">Enroll to start tracking your progress.</p>
+            <h4 className="font-medium text-sm mb-1 text-text-primary">
+              {isEnrolled ? "Enrolled" : "Not Enrolled"}
+            </h4>
+            <p className="text-xs text-text-muted mb-6">
+              {isEnrolled ? "You are enrolled in this course." : "Enroll to start tracking your progress."}
+            </p>
+            {enrolling ? (
+              <button disabled className="w-full py-2.5 rounded-xl bg-primary/50 text-white text-sm font-bold flex items-center justify-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                {isEnrolled ? "Unenrolling..." : "Enrolling..."}
+              </button>
+            ) : isEnrolled ? (
+              <button onClick={handleUnenroll} className="w-full py-2.5 rounded-xl border border-red-200 text-red-500 text-sm font-bold hover:bg-red-50 active:scale-95 transition-all">
+                Unenroll
+              </button>
+            ) : (
+              <button onClick={handleEnroll} className="w-full py-2.5 rounded-xl bg-primary text-white text-sm font-bold shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all">
+                Enroll Now
+              </button>
+            )}
           </div>
 
           <div className="bg-bg-primary p-6 rounded-xl border border-bg-tertiary">
