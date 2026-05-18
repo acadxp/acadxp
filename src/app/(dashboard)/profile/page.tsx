@@ -6,7 +6,7 @@ import { profileService } from "@/services/profile.service";
 import { courseService } from "@/services/course.service";
 import { motion } from "motion/react";
 import {
-  MapPin, Calendar, Github, Linkedin, ExternalLink,
+  MapPin, Calendar, Github, Linkedin, ExternalLink, Twitter, Globe,
   Terminal, Brain, TrendingUp, Award, CheckCircle,
   FileText, Zap, ChevronRight, BookOpen, Users,
   Flame, Layout, Star, Link as LinkIcon, Loader2,
@@ -160,21 +160,27 @@ export default function ProfilePage() {
               Edit profile
             </Link>
             <div className="flex gap-4">
-              {profile?.socials?.github && (
-                <a href={profile.socials.github} target="_blank" rel="noopener noreferrer" className="text-white/70 hover:text-white transition-colors">
-                  <Github size={20} />
-                </a>
-              )}
-              {profile?.socials?.linkedin && (
-                <a href={profile.socials.linkedin} target="_blank" rel="noopener noreferrer" className="text-white/70 hover:text-white transition-colors">
-                  <Linkedin size={20} />
-                </a>
-              )}
-              {profile?.socials?.website && (
-                <a href={profile.socials.website} target="_blank" rel="noopener noreferrer" className="text-white/70 hover:text-white transition-colors">
-                  <ExternalLink size={20} />
-                </a>
-              )}
+              {[
+                { key: "github", icon: Github },
+                { key: "linkedin", icon: Linkedin },
+                { key: "twitter", icon: Twitter },
+                { key: "website", icon: Globe },
+              ].map(({ key, icon: Icon }) => {
+                const socials = (profile?.socials ?? {}) as Record<string, string>;
+                const url = socials[key]?.trim();
+                return (
+                  <a
+                    key={key}
+                    href={url ? (url.startsWith("http") ? url : `https://${url}`) : "#"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`transition-colors ${url ? "text-white/70 hover:text-white" : "text-white/20 hover:text-white/40"}`}
+                    title={url ? key : `No ${key} connected`}
+                  >
+                    <Icon size={20} />
+                  </a>
+                );
+              })}
             </div>
           </div>
         </div>
