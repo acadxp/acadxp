@@ -6,6 +6,7 @@ import { profileService } from "@/services/profile.service";
 import { academicInfoService } from "@/services/academic-info.service";
 import { notificationPreferenceService } from "@/services/notification-preference.service";
 import { apiKeyService } from "@/services/api-key.service";
+import { authService, type Session } from "@/services/auth.service";
 import { motion, AnimatePresence } from "motion/react";
 import {
   User, GraduationCap, Bell, Palette, Lock, Key,
@@ -593,44 +594,145 @@ function AppearanceSection({
 
 /* ─── Security Section ─── */
 function SecuritySection() {
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [pwError, setPwError] = useState("");
+  const [pwSuccess, setPwSuccess] = useState(false);
+
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [sessionsLoading, setSessionsLoading] = useState(true);
+  const [revoking, setRevoking] = useState(false);
+
+  const fetchSessions = async () => {
+    setSessionsLoading(true);
+    try {
+      const res = await authService.getSessions();
+      setSessions(res.data.data?.sessions ?? []);
+    } catch {} finally {
+      setSessionsLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchSessions(); }, []);
+
+  const getStrength = (pw: string) => {
+    if (pw.length < 6) return { bars: 1, label: "Weak", color: "text-red-500", barColors: ["bg-red-500", "bg-bg-tertiary", "bg-bg-tertiary", "bg-bg-tertiary"] };
+    if (pw.length < 10) return { bars: 2, label: "Fair", color: "text-orange-500", barColors: ["bg-orange-500", "bg-orange-500", "bg-bg-tertiary", "bg-bg-tertiary"] };
+    if (/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(pw)) return { bars: 4, label: "Strong", color: "text-primary", barColors: ["bg-primary", "bg-primary", "bg-primary", "bg-primary"] };
+    return { bars: 3, label: "Good", color: "text-yellow-500", barColors: ["bg-yellow-500", "bg-yellow-500", "bg-yellow-500", "bg-bg-tertiary"] };
+  };
+
+  const handleChangePassword = async () => {
+    setPwError("");
+    setPwSuccess(false);
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setPwError("All fields are required");
+      return;
+    }
+    if (newPassword.length < 8) {
+      setPwError("New password must be at least 8 characters");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPwError("Passwords do not match");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await authService.changePassword(currentPassword, newPassword);
+      setPwSuccess(true);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err: any) {
+      setPwError(err?.response?.data?.message || "Failed to update password");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleRevokeAll = async () => {
+    setRevoking(true);
+    try {
+      await authService.revokeAllSessions();
+      await fetchSessions();
+    } catch {} finally {
+      setRevoking(false);
+    }
+  };
+
+  const strength = getStrength(newPassword);
 
   return (
     <section>
       <h2 className="text-2xl font-extrabold tracking-tight text-text-primary mb-8">Security</h2>
       <div className="bg-bg-primary p-8 rounded-xl border border-bg-tertiary space-y-10">
+        {/* Change Password */}
         <div className="space-y-6">
           <h3 className="text-sm font-black uppercase tracking-widest text-text-muted">Change Password</h3>
           <div className="space-y-4 max-w-md">
-            <PasswordInput label="Current password" show={showCurrent} onToggle={() => setShowCurrent(!showCurrent)} />
-            <PasswordInput label="New password" show={showNew} onToggle={() => setShowNew(!showNew)} />
-            <div className="pt-2">
-              <div className="flex gap-1 h-1.5 mb-1">
-                <div className="flex-1 bg-primary rounded-full" />
-                <div className="flex-1 bg-primary rounded-full" />
-                <div className="flex-1 bg-primary rounded-full" />
-                <div className="flex-1 bg-bg-tertiary rounded-full" />
+            <PasswordInput label="Current password" show={showCurrent} onToggle={() => setShowCurrent(!showCurrent)} value={currentPassword} onChange={setCurrentPassword} />
+            <PasswordInput label="New password" show={showNew} onToggle={() => setShowNew(!showNew)} value={newPassword} onChange={setNewPassword} />
+            {newPassword && (
+              <div className="pt-2">
+                <div className="flex gap-1 h-1.5 mb-1">
+                  {strength.barColors.map((c, i) => (
+                    <div key={i} className={`flex-1 ${c} rounded-full transition-all`} />
+                  ))}
+                </div>
+                <p className={`text-[10px] font-bold ${strength.color}`}>{strength.label}</p>
               </div>
-              <p className="text-[10px] font-bold text-primary">Strong</p>
-            </div>
-            <PasswordInput label="Confirm new password" show={showConfirm} onToggle={() => setShowConfirm(!showConfirm)} />
+            )}
+            <PasswordInput label="Confirm new password" show={showConfirm} onToggle={() => setShowConfirm(!showConfirm)} value={confirmPassword} onChange={setConfirmPassword} />
           </div>
-          <button className="bg-primary text-white px-6 py-2.5 rounded-xl font-bold hover:opacity-90 transition-all">
+          {pwError && <p className="text-sm font-bold text-red-500">{pwError}</p>}
+          {pwSuccess && <p className="text-sm font-bold text-emerald-600">Password updated successfully</p>}
+          <button
+            onClick={handleChangePassword}
+            disabled={saving}
+            className="bg-primary text-white px-6 py-2.5 rounded-xl font-bold hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-2"
+          >
+            {saving && <Loader2 className="w-4 h-4 animate-spin" />}
             Update password
           </button>
         </div>
 
+        {/* Active Sessions */}
         <div className="border-t border-bg-tertiary pt-10 space-y-6">
           <h3 className="text-sm font-black uppercase tracking-widest text-text-muted">Active Sessions</h3>
-          <div className="space-y-4">
-            <SessionItem icon={Laptop} title='MacBook Pro 16"' details="192.168.x.x · Last active: Just now" current />
-            <SessionItem icon={Smartphone} title="iPhone 15 Pro" details="172.20.x.x · Last active: 2 hours ago" />
-          </div>
-          <button className="text-xs font-bold text-red-500 hover:underline uppercase tracking-widest">
-            Revoke all other sessions
-          </button>
+          {sessionsLoading ? (
+            <Loader2 className="w-5 h-5 animate-spin text-text-muted" />
+          ) : sessions.length === 0 ? (
+            <p className="text-sm text-text-secondary">No active sessions</p>
+          ) : (
+            <div className="space-y-4">
+              {sessions.map((s) => (
+                <SessionItem
+                  key={s.id}
+                  icon={s.deviceType === "mobile" ? Smartphone : Laptop}
+                  title={s.deviceName || "Unknown device"}
+                  details={`${s.ipAddress || "Unknown IP"} · Last active: ${formatLastUsed(s.lastActiveAt)}`}
+                  current={s.isCurrent}
+                />
+              ))}
+            </div>
+          )}
+          {sessions.length > 1 && (
+            <button
+              onClick={handleRevokeAll}
+              disabled={revoking}
+              className="text-xs font-bold text-red-500 hover:underline uppercase tracking-widest disabled:opacity-50"
+            >
+              {revoking ? "Revoking..." : "Revoke all other sessions"}
+            </button>
+          )}
         </div>
       </div>
     </section>
@@ -881,11 +983,13 @@ function SocialInput({
 }
 
 function PasswordInput({
-  label, show, onToggle,
+  label, show, onToggle, value, onChange,
 }: {
   label: string;
   show: boolean;
   onToggle: () => void;
+  value?: string;
+  onChange?: (v: string) => void;
 }) {
   return (
     <div className="space-y-1.5">
@@ -894,6 +998,8 @@ function PasswordInput({
         <input
           className="w-full bg-bg-primary border border-bg-tertiary rounded-xl focus:ring-2 focus:ring-primary focus:border-primary px-4 py-2.5 outline-none transition-all text-text-primary pr-10"
           type={show ? "text" : "password"}
+          value={value}
+          onChange={(e) => onChange?.(e.target.value)}
         />
         <button
           type="button"
