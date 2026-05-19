@@ -30,14 +30,22 @@ export const useAuthStore = create<AuthState>()((set) => ({
       const { data } = await authService.register(name, email, password);
       setAccessToken(data.data.accessToken);
 
-      const username = email.split("@")[0];
-      const { data: profileData } = await profileService.createProfile({ username });
-      const profile = profileData.data!.profile;
+      let profile: any = null;
+      try {
+        const { data: existing } = await profileService.getProfile();
+        profile = existing.data?.profile;
+      } catch {}
 
-      await academicInfoService.create({
-        profileId: profile.id,
-        enrollmentStatus: "FULL_TIME",
-      });
+      if (!profile) {
+        const username = email.split("@")[0];
+        const { data: profileData } = await profileService.createProfile({ username });
+        profile = profileData.data!.profile;
+
+        await academicInfoService.create({
+          profileId: profile.id,
+          enrollmentStatus: "FULL_TIME",
+        });
+      }
 
       set({ user: data.data.user, isAuthenticated: true });
     } catch (err: any) {

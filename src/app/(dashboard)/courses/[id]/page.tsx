@@ -1,9 +1,9 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Brain, Zap, BookOpen, Loader2 } from "lucide-react";
+import { ArrowLeft, Brain, Zap, BookOpen, Trophy, Loader2, CheckCircle, Clock, Play } from "lucide-react";
 import useCourseStore from "@/store/CourseStore";
 import { courseService } from "@/services/course.service";
 import { formatEnum } from "@/components/courses/course-utils";
@@ -12,8 +12,6 @@ import { CourseDetailError } from "@/components/courses/course-detail-error";
 import { motion } from "motion/react";
 import type { StudentCourseEnrollment } from "@/types";
 
-const tabs = ["Overview", "Skills"];
-
 export default function CourseDetailPage() {
   const params = useParams();
   const id = params?.id as string;
@@ -21,6 +19,10 @@ export default function CourseDetailPage() {
   const [activeTab, setActiveTab] = useState("Overview");
   const [enrollment, setEnrollment] = useState<StudentCourseEnrollment | null>(null);
   const [enrolling, setEnrolling] = useState(false);
+  const [challenges, setChallenges] = useState<any[]>([]);
+  const [challengesLoading, setChallengesLoading] = useState(false);
+  const isEnrolled = !!enrollment;
+  const tabs = isEnrolled ? ["Overview", "Challenges", "Skills"] : ["Overview", "Skills"];
 
   useEffect(() => {
     if (!id) return;
@@ -31,6 +33,24 @@ export default function CourseDetailPage() {
       setEnrollment(match ?? null);
     }).catch(() => {});
   }, [id, fetchCourseById]);
+
+  const fetchChallenges = useCallback(async () => {
+    if (!id) return;
+    setChallengesLoading(true);
+    try {
+      const res = await courseService.getChallenges(id);
+      setChallenges(res.data.data ?? []);
+    } catch {
+      setChallenges([]);
+    } finally {
+      setChallengesLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    if (isEnrolled) fetchChallenges();
+    else setChallenges([]);
+  }, [isEnrolled, fetchChallenges]);
 
   const handleEnroll = async () => {
     setEnrolling(true);
@@ -55,8 +75,6 @@ export default function CourseDetailPage() {
       setEnrolling(false);
     }
   };
-
-  const isEnrolled = !!enrollment;
 
   if (loading || (!course && !error)) return <CourseDetailSkeleton />;
   if (error) return <CourseDetailError message={error} />;
@@ -165,6 +183,64 @@ export default function CourseDetailPage() {
                   <p>{course.description || "No description provided."}</p>
                 </div>
               </div>
+            </section>
+          )}
+
+          {activeTab === "Challenges" && (
+            <section>
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-2">
+                  <Trophy className="w-5 h-5 text-primary" />
+                  <h3 className="text-lg font-medium text-text-primary">Course Challenges</h3>
+                </div>
+                <span className="text-xs text-text-muted">{challenges.filter((c) => c.status === "COMPLETED").length}/{challenges.length} completed</span>
+              </div>
+              {challengesLoading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="animate-pulse bg-bg-tertiary h-20 rounded-xl" />
+                  ))}
+                </div>
+              ) : challenges.length === 0 ? (
+                <p className="text-sm text-text-muted">No challenges available yet.</p>
+              ) : (
+                <div className="space-y-3">
+                  {challenges.map((ch, idx) => (
+                    <Link
+                      key={ch.id}
+                      href={`/courses/${id}/challenges/${ch.id}`}
+                      className="flex items-center justify-between p-4 bg-bg-primary border border-bg-tertiary rounded-xl hover:border-primary/30 transition-all group"
+                    >
+                      <div className="flex items-center gap-4">
+                        <span className="w-8 h-8 rounded-lg bg-bg-tertiary flex items-center justify-center text-xs font-bold text-text-secondary group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                          {idx + 1}
+                        </span>
+                        <div>
+                          <p className="text-sm font-medium text-text-primary group-hover:text-primary transition-colors">{ch.title}</p>
+                          <div className="flex items-center gap-3 mt-1">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted">{ch.difficulty}</span>
+                            <span className="text-[10px] text-text-muted">{ch.xpReward} XP</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        {ch.status === "COMPLETED" ? (
+                          <CheckCircle className="w-5 h-5 text-green-500" />
+                        ) : ch.status === "IN_PROGRESS" ? (
+                          <div className="flex items-center gap-2">
+                            <div className="w-16 h-1.5 bg-bg-tertiary rounded-full overflow-hidden">
+                              <div className="h-full bg-primary rounded-full" style={{ width: `${ch.progress}%` }} />
+                            </div>
+                            <Clock className="w-4 h-4 text-amber-400" />
+                          </div>
+                        ) : (
+                          <Play className="w-4 h-4 text-text-muted group-hover:text-primary transition-colors" />
+                        )}
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
             </section>
           )}
 

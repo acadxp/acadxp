@@ -7,6 +7,16 @@ export const academicInfoService = {
       params: { profileId },
     }),
 
+  updateMyInfo: (data: {
+    institution?: string;
+    degree?: string;
+    major?: string;
+    semester?: string;
+    enrollmentStatus?: string;
+    graduationDate?: string;
+    enrolledDate?: string;
+  }) => api.patch<ApiResponse<{ academicInfo: AcademicInfo }>>("/academic-infos/me", data),
+
   create: (data: {
     profileId: string;
     institution?: string;
