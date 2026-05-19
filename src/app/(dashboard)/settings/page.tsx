@@ -109,7 +109,7 @@ export default function SettingsPage() {
                   <ProfileSection
                     user={user}
                     profile={profile}
-                    onSave={(data) => wrapSave(() => profileService.updateProfile(data))}
+                    onSaveProfile={(data) => wrapSave(() => profileService.updateProfile(data))}
                     saving={saving}
                   />
                 )}
@@ -169,16 +169,18 @@ export default function SettingsPage() {
 function ProfileSection({
   user,
   profile,
-  onSave,
+  onSaveProfile,
   saving,
 }: {
   user: any;
   profile: Profile | null;
-  onSave: (data: any) => Promise<void>;
+  onSaveProfile: (data: any) => Promise<void>;
   saving: boolean;
 }) {
   const [name, setName] = useState(user?.name ?? "");
   const [username, setUsername] = useState(profile?.username ?? "");
+  const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
+  const [usernameSaving, setUsernameSaving] = useState(false);
   const [bio, setBio] = useState(profile?.bio ?? "");
   const [location, setLocation] = useState(profile?.location ?? "");
   const socials = profile?.socials as Record<string, string> | undefined;
@@ -187,14 +189,56 @@ function ProfileSection({
   const [twitter, setTwitter] = useState(socials?.twitter ?? "");
   const [website, setWebsite] = useState(socials?.website ?? "");
 
-  const handleSave = () =>
-    onSave({
+  useEffect(() => {
+    setName(user?.name ?? "");
+  }, [user?.name]);
+
+  useEffect(() => {
+    setUsername(profile?.username ?? "");
+    setBio(profile?.bio ?? "");
+    setLocation(profile?.location ?? "");
+    const s = (profile?.socials ?? {}) as Record<string, string>;
+    setGithub(s.github ?? "");
+    setLinkedin(s.linkedin ?? "");
+    setTwitter(s.twitter ?? "");
+    setWebsite(s.website ?? "");
+  }, [profile]);
+
+  const checkUsername = async () => {
+    if (!username.trim() || username === profile?.username) return true;
+    setUsernameStatus("checking");
+    try {
+      await profileService.checkUsername(username);
+      setUsernameStatus("available");
+      return true;
+    } catch {
+      setUsernameStatus("taken");
+      return false;
+    }
+  };
+
+  const handleSaveUsername = async () => {
+    if (!username.trim() || usernameStatus === "taken") return;
+    const isAvailable = await checkUsername();
+    if (!isAvailable) return;
+    setUsernameSaving(true);
+    try {
+      await onSaveProfile({ username });
+      setUsernameStatus("idle");
+    } finally {
+      setUsernameSaving(false);
+    }
+  };
+
+  const handleSaveProfile = () =>
+    onSaveProfile({
       name,
-      username,
       bio,
       location,
       socials: { github, linkedin, twitter, website },
     });
+
+  const usernameChanged = username !== profile?.username;
 
   return (
     <section>
@@ -211,18 +255,43 @@ function ProfileSection({
 
         <div className="grid grid-cols-1 gap-6">
           <InputGroup label="Full name" value={name} onChange={setName} />
+
+          {/* Username */}
           <div className="space-y-1.5">
             <label className="text-sm font-bold text-text-secondary">Username</label>
-            <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted font-medium">@</span>
-              <input
-                className="w-full pl-8 bg-bg-primary border border-bg-tertiary rounded-xl focus:ring-2 focus:ring-primary focus:border-primary px-4 py-2.5 outline-none transition-all text-text-primary"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-              />
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted font-medium">@</span>
+                <input
+                  className="w-full pl-8 bg-bg-primary border border-bg-tertiary rounded-xl focus:ring-2 focus:ring-primary focus:border-primary px-4 py-2.5 outline-none transition-all text-text-primary"
+                  type="text"
+                  value={username}
+                  onChange={(e) => { setUsername(e.target.value); setUsernameStatus("idle"); }}
+                />
+              </div>
+              <button
+                onClick={checkUsername}
+                disabled={!usernameChanged || !username.trim()}
+                className="border border-bg-tertiary text-text-secondary px-4 py-2.5 rounded-xl font-bold text-sm hover:bg-bg-secondary transition-all disabled:opacity-50 h-[42px]"
+              >
+                {usernameStatus === "checking" ? <Loader2 className="w-4 h-4 animate-spin" /> : "Check"}
+              </button>
+              <button
+                onClick={handleSaveUsername}
+                disabled={usernameSaving || usernameStatus === "taken" || !usernameChanged || !username.trim()}
+                className="bg-primary text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 h-[42px]"
+              >
+                {usernameSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save"}
+              </button>
             </div>
+            {usernameStatus === "available" && (
+              <p className="text-xs font-bold text-emerald-600 mt-1">Username is available</p>
+            )}
+            {usernameStatus === "taken" && (
+              <p className="text-xs font-bold text-red-500 mt-1">Username is already taken</p>
+            )}
           </div>
+
           <div className="space-y-1.5">
             <label className="text-sm font-bold text-text-secondary">Email</label>
             <div className="flex items-center gap-3">
@@ -262,12 +331,12 @@ function ProfileSection({
 
         <div className="flex justify-end pt-4">
           <button
-            onClick={handleSave}
+            onClick={handleSaveProfile}
             disabled={saving}
             className="bg-primary text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2"
           >
             {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-            Save Changes
+            Save Profile
           </button>
         </div>
       </div>
@@ -297,6 +366,17 @@ function AcademicSection({
   const [graduationDate, setGraduationDate] = useState(
     acad?.graduationDate ? new Date(acad.graduationDate).toISOString().split("T")[0] : "",
   );
+
+  useEffect(() => {
+    const a = profile?.academicInfo;
+    setInstitution(a?.institution ?? "");
+    setDegree(a?.degree ?? "MASTERS");
+    setMajor(a?.major ?? "");
+    setSemester(a?.semester ?? "");
+    setEnrollmentStatus(a?.enrollmentStatus ?? "FULL_TIME");
+    setEnrolledDate(a?.enrolledDate ? new Date(a.enrolledDate).toISOString().split("T")[0] : "");
+    setGraduationDate(a?.graduationDate ? new Date(a.graduationDate).toISOString().split("T")[0] : "");
+  }, [profile]);
 
   const handleSave = () =>
     onSave({ institution, degree, major, semester, enrollmentStatus, enrolledDate, graduationDate });
@@ -451,6 +531,12 @@ function AppearanceSection({
   const prefs = (profile?.preferences ?? {}) as any;
   const [theme, setTheme] = useState(prefs.theme ?? "system");
   const [accentColor, setAccentColor] = useState(prefs.accentColor ?? "#4f46e5");
+
+  useEffect(() => {
+    const p = (profile?.preferences ?? {}) as any;
+    setTheme(p.theme ?? "system");
+    setAccentColor(p.accentColor ?? "#4f46e5");
+  }, [profile]);
 
   const handleSave = () => onSave({ preferences: { theme, accentColor } });
 

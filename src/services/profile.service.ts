@@ -13,13 +13,15 @@ export const profileService = {
   }) => api.post<ApiResponse<{ profile: Profile }>>("/users/profile/create", data),
 
   updateProfile: (data: {
-    name?: string;
     username?: string;
     bio?: string;
     location?: string;
     socials?: Record<string, string>;
     preferences?: { theme?: string; accentColor?: string };
   }) => api.patch<ApiResponse<{ profile: Profile }>>("/users/profile", data),
+
+  updateName: (name: string) =>
+    api.patch<ApiResponse>("/users/name", { name }),
 
   checkUsername: (username: string) =>
     api.get<ApiResponse>("/users/profile/check-username", {
