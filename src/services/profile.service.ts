@@ -27,4 +27,10 @@ export const profileService = {
     api.get<ApiResponse>("/users/profile/check-username", {
       params: { username },
     }),
+
+  resetProgress: () =>
+    api.post<ApiResponse>("/users/reset-progress"),
+
+  deleteAccount: () =>
+    api.delete<ApiResponse>("/users/account"),
 };

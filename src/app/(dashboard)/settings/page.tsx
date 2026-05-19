@@ -899,19 +899,75 @@ function ApiKeysSection() {
 
 /* ─── Danger Zone Section ─── */
 function DangerZoneSection({ onLogout }: { onLogout: () => void }) {
+  const [resetting, setResetting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleReset = async () => {
+    setError("");
+    setResetting(true);
+    try {
+      await profileService.resetProgress();
+      setConfirmReset(false);
+    } catch (err: any) {
+      setError(err?.response?.data?.message || "Failed to reset progress");
+    } finally {
+      setResetting(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    setError("");
+    setDeleting(true);
+    try {
+      await profileService.deleteAccount();
+      onLogout();
+    } catch (err: any) {
+      setError(err?.response?.data?.message || "Failed to delete account");
+      setDeleting(false);
+    }
+  };
+
   return (
     <section>
       <h2 className="text-2xl font-extrabold tracking-tight text-text-primary mb-8">Danger Zone</h2>
       <div className="bg-red-50 border-2 border-red-200 rounded-xl p-8 space-y-8">
+        {error && <p className="text-sm font-bold text-red-600">{error}</p>}
+
         <div className="flex items-center justify-between gap-8 flex-wrap">
           <div>
             <p className="font-bold text-red-600">Delete all progress</p>
             <p className="text-sm text-text-secondary max-w-lg">Permanently reset your XP, level, badges and challenge history. Your account and courses remain.</p>
           </div>
-          <button className="px-6 py-2.5 border-2 border-red-500 text-red-500 font-bold rounded-xl hover:bg-red-500 hover:text-white transition-all whitespace-nowrap">
-            Reset progress
-          </button>
+          {confirmReset ? (
+            <div className="flex gap-2">
+              <button
+                onClick={handleReset}
+                disabled={resetting}
+                className="px-6 py-2.5 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-all disabled:opacity-50 flex items-center gap-2"
+              >
+                {resetting && <Loader2 className="w-4 h-4 animate-spin" />}
+                Confirm reset
+              </button>
+              <button
+                onClick={() => setConfirmReset(false)}
+                className="px-6 py-2.5 border-2 border-bg-tertiary text-text-secondary font-bold rounded-xl hover:bg-bg-secondary transition-all"
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirmReset(true)}
+              className="px-6 py-2.5 border-2 border-red-500 text-red-500 font-bold rounded-xl hover:bg-red-500 hover:text-white transition-all whitespace-nowrap"
+            >
+              Reset progress
+            </button>
+          )}
         </div>
+
         <div className="pt-8 border-t border-red-100 flex items-center justify-between gap-8 flex-wrap">
           <div>
             <p className="font-bold text-red-600">Logout</p>
@@ -924,14 +980,37 @@ function DangerZoneSection({ onLogout }: { onLogout: () => void }) {
             Logout
           </button>
         </div>
+
         <div className="pt-8 border-t border-red-100 flex items-center justify-between gap-8 flex-wrap">
           <div>
             <p className="font-bold text-red-600">Delete account</p>
             <p className="text-sm text-text-secondary max-w-lg">Permanently delete your account and all associated data. This cannot be undone.</p>
           </div>
-          <button className="px-6 py-2.5 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-all shadow-lg shadow-red-200 whitespace-nowrap">
-            Delete account
-          </button>
+          {confirmDelete ? (
+            <div className="flex gap-2">
+              <button
+                onClick={handleDeleteAccount}
+                disabled={deleting}
+                className="px-6 py-2.5 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-all disabled:opacity-50 flex items-center gap-2"
+              >
+                {deleting && <Loader2 className="w-4 h-4 animate-spin" />}
+                Confirm delete
+              </button>
+              <button
+                onClick={() => setConfirmDelete(false)}
+                className="px-6 py-2.5 border-2 border-bg-tertiary text-text-secondary font-bold rounded-xl hover:bg-bg-secondary transition-all"
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirmDelete(true)}
+              className="px-6 py-2.5 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-all shadow-lg shadow-red-200 whitespace-nowrap"
+            >
+              Delete account
+            </button>
+          )}
         </div>
       </div>
     </section>
