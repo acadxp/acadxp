@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { User, Settings, LogOut } from "lucide-react";
-import { authService } from "@/services/auth.service";
+import { useAuthStore } from "@/stores/auth.store";
 import { navItems } from "@/lib/utils";
 
 const userLinks = [
@@ -25,9 +25,9 @@ export default function MobileMenu({ user, onClose }: MobileMenuProps) {
 
   const isActive = (href: string) => pathname === href;
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     onClose();
-    authService.logout();
+    await useAuthStore.getState().logout();
     router.push("/login");
   };
 
