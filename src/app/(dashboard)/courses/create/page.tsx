@@ -458,6 +458,10 @@ export default function CreateCoursePage() {
     reset,
   } = useCourseCreationStore();
 
+  useEffect(() => {
+    reset();
+  }, []);
+
   const {
     register,
     handleSubmit,

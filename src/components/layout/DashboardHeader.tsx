@@ -6,14 +6,9 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useAuthStore } from "@/stores/auth.store";
 import {
-  LayoutDashboard,
-  BookOpen,
-  Trophy,
-  Map,
   User,
   Settings,
   LogOut,
-  ChevronDown,
   Menu,
   X,
   Bell,
@@ -22,7 +17,6 @@ import {
 } from "lucide-react";
 
 import MobileMenu from "./MobileMenu";
-import { navItems } from "@/lib/utils";
 
 const userLinks = [
   { href: "/profile", label: "Profile", icon: User },
@@ -62,25 +56,10 @@ export default function DashboardHeader() {
   return (
     <>
       <header className="h-16 border-b border-bg-tertiary bg-bg-primary sticky top-0 z-40 px-4 md:px-8 flex items-center justify-between">
-        <div className="flex items-center gap-4 lg:gap-10">
-          <h2 className="text-lg font-black tracking-tight truncate hidden sm:block max-w-[200px] lg:max-w-none">
+        <div className="flex items-center gap-4">
+          <h2 className="text-lg font-black tracking-tight truncate max-w-[200px] lg:max-w-none">
             {pageTitle}
           </h2>
-          <nav className="hidden md:flex gap-4 lg:gap-8 h-16">
-            {navItems.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`text-sm flex items-center transition-colors ${
-                  isActive(link.href)
-                    ? "font-bold text-primary border-b-2 border-primary"
-                    : "font-medium text-text-secondary hover:text-text-primary"
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
         </div>
 
         <div className="flex items-center gap-3 md:gap-6">

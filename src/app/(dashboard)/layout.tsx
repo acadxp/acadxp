@@ -6,6 +6,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { navItems } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth.store";
+import { getAccessToken } from "@/lib/axios";
 import { useEffect, useState } from "react";
 
 import { cn } from "@/lib/utils";
@@ -50,7 +51,9 @@ export default function DashboardLayout({
 
   useEffect(() => {
     const initializeAuth = async () => {
-      await refreshSession();
+      if (!getAccessToken()) {
+        await refreshSession();
+      }
       setIsInitialized(true);
     };
 

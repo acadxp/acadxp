@@ -59,7 +59,7 @@ api.interceptors.response.use(
         processQueue(refreshError, null);
         setAccessToken(null);
         if (typeof window !== "undefined") {
-          window.location.href = "/login";
+          window.location.href = "/start";
         }
         return Promise.reject(refreshError);
       } finally {
