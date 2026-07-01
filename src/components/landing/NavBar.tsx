@@ -11,11 +11,18 @@ export default function NavBar() {
 
   return (
     <div className="fixed top-0 w-full z-50 flex flex-col">
-      <div className="bg-red-500 text-white text-xs sm:text-sm font-medium py-2 px-4 flex items-center justify-center gap-2">
+      <div className="bg-amber-500 text-white text-xs sm:text-sm font-medium py-3 px-4 flex items-center justify-center gap-2">
         <span>
-          👋 <strong>Friendly heads-up:</strong> Our backend is hosted on a free
-          tier and sleeps after 15 seconds of inactivity. If things seem slow,
-          it's just waking back up!
+          🚧 <strong>Project no longer maintained:</strong> This project is no
+          longer actively maintained. If you&apos;re interested in continuing
+          the development, please reach out to{" "}
+          <a
+            href="mailto:ismael.loko@proton.me"
+            className="underline font-semibold hover:text-amber-100"
+          >
+            ismael.loko@proton.me
+          </a>
+          🚧
         </span>
       </div>
       <nav className="w-full bg-white/80 backdrop-blur-md border-b border-[#f7f7f6]">

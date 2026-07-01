@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "motion/react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { motion } from "motion/react";
 import Image from "next/image";
 
 const images = [
@@ -18,43 +17,13 @@ const images = [
   { src: "/assets/img/screenshots/10-setting.png", alt: "Settings" },
 ];
 
-const variants = {
-  enter: (dir: number) => ({
-    x: dir > 0 ? 400 : -400,
-    rotateY: dir > 0 ? 30 : -30,
-    scale: 0.6,
-    opacity: 0,
-    filter: "blur(8px)",
-  }),
-  center: {
-    x: 0,
-    rotateY: 0,
-    scale: 1,
-    opacity: 1,
-    filter: "blur(0px)",
-  },
-  exit: (dir: number) => ({
-    x: dir > 0 ? -400 : 400,
-    rotateY: dir > 0 ? -30 : 30,
-    scale: 0.6,
-    opacity: 0,
-    filter: "blur(8px)",
-  }),
-};
-
 export default function ScreenshotCarousel() {
-  const [[currentIndex, direction], setState] = useState([0, 0]);
+  const [centerIndex, setCenterIndex] = useState(0);
   const touchStart = useRef<number | null>(null);
 
-  const paginate = useCallback((newDirection: number) => {
-    setState(([current]) => {
-      const next = (current + newDirection + images.length) % images.length;
-      return [next, newDirection];
-    });
+  const paginate = useCallback((dir: number) => {
+    setCenterIndex((prev) => (prev + dir + images.length) % images.length);
   }, []);
-
-  const handlePrev = () => paginate(-1);
-  const handleNext = () => paginate(1);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -78,6 +47,10 @@ export default function ScreenshotCarousel() {
     touchStart.current = null;
   };
 
+  const getSlide = (offset: number) => {
+    return (centerIndex + offset + images.length) % images.length;
+  };
+
   return (
     <section className="py-20 md:py-32 bg-[#0a0a0a] overflow-hidden">
       <div className="max-w-7xl mx-auto px-6 md:px-8">
@@ -91,93 +64,117 @@ export default function ScreenshotCarousel() {
         </div>
 
         <div
-          className="relative mx-auto max-w-5xl"
-          style={{ perspective: "1400px" }}
+          className="relative mx-auto grid place-items-center select-none"
+          style={{ perspective: "1200px", height: "clamp(260px, 50vw, 480px)", maxWidth: "960px" }}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
         >
-          <div
-            className="relative aspect-video flex items-center justify-center"
-            onTouchStart={handleTouchStart}
-            onTouchEnd={handleTouchEnd}
-          >
-            <AnimatePresence custom={direction} mode="popLayout">
+          {[-1, 0, 1].map((offset) => {
+            const idx = getSlide(offset);
+            const abs = Math.abs(offset);
+            const dir = offset > 0 ? 1 : offset < 0 ? -1 : 0;
+
+            return (
               <motion.div
-                key={currentIndex}
-                custom={direction}
-                variants={variants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={{
-                  x: { type: "spring", stiffness: 260, damping: 26 },
-                  rotateY: { type: "spring", stiffness: 260, damping: 26 },
-                  scale: { type: "spring", stiffness: 260, damping: 26 },
-                  opacity: { duration: 0.35 },
-                  filter: { duration: 0.35 },
+                key={images[idx].src}
+                animate={{
+                  rotateY: -dir * 28,
+                  x: dir * abs * 170,
+                  z: -abs * 140,
+                  scale: 1 - abs * 0.25,
+                  opacity: 1 - abs * 0.45,
                 }}
-                className="absolute inset-0 flex items-center justify-center"
-                style={{ transformStyle: "preserve-3d" }}
+                transition={{
+                  type: "spring",
+                  stiffness: 240,
+                  damping: 28,
+                  mass: 0.8,
+                }}
+                className="col-span-full row-span-full cursor-pointer"
+                style={{
+                  width: "clamp(200px, 60%, 600px)",
+                  aspectRatio: "16/10",
+                  transformStyle: "preserve-3d",
+                  zIndex: 10 - abs,
+                }}
+                onClick={() => {
+                  if (offset === -1) paginate(-1);
+                  else if (offset === 1) paginate(1);
+                }}
               >
-                <div className="relative w-full h-full rounded-2xl overflow-hidden ring-1 ring-white/10 shadow-2xl shadow-indigo-500/10">
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent z-10 pointer-events-none" />
+                <div
+                  className="relative w-full h-full rounded-xl md:rounded-2xl overflow-hidden ring-1 ring-white/10"
+                  style={{
+                    boxShadow:
+                      offset === 0
+                        ? "0 20px 60px -8px rgba(99,102,241,0.3)"
+                        : "0 8px 24px -6px rgba(0,0,0,0.4)",
+                  }}
+                >
                   <Image
-                    src={images[currentIndex].src}
-                    alt={images[currentIndex].alt}
+                    src={images[idx].src}
+                    alt={images[idx].alt}
                     fill
                     className="object-cover"
-                    sizes="(max-width: 1024px) 100vw, 1024px"
+                    sizes="(max-width: 768px) 80vw, 600px"
                     priority
+                    draggable={false}
                   />
                 </div>
               </motion.div>
-            </AnimatePresence>
+            );
+          })}
 
-            <div
-              className="absolute -inset-x-4 -inset-y-4 -z-10 blur-3xl pointer-events-none"
-              style={{
-                background:
-                  "radial-gradient(circle, rgba(99,102,241,0.1) 0%, transparent 70%)",
-              }}
-            />
-          </div>
-
-          <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 flex justify-between pointer-events-none px-2 md:px-4">
-            <button
-              onClick={handlePrev}
-              className="pointer-events-auto w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/10 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors active:scale-90"
-              aria-label="Previous screenshot"
-            >
-              <ChevronLeft size={20} />
-            </button>
-            <button
-              onClick={handleNext}
-              className="pointer-events-auto w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/10 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors active:scale-90"
-              aria-label="Next screenshot"
-            >
-              <ChevronRight size={20} />
-            </button>
-          </div>
+          <div
+            className="absolute -inset-x-8 -inset-y-8 -z-10 blur-3xl pointer-events-none"
+            style={{
+              background:
+                "radial-gradient(circle at center, rgba(99,102,241,0.08) 0%, transparent 70%)",
+            }}
+          />
         </div>
 
-        <div className="flex items-center justify-center gap-2 mt-8">
-          {images.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => {
-                const dir = i > currentIndex ? 1 : -1;
-                setState([i, dir]);
-              }}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
-                i === currentIndex
-                  ? "w-8 bg-indigo-500"
-                  : "w-1.5 bg-white/20 hover:bg-white/40"
-              }`}
-              aria-label={`Go to screenshot ${i + 1}`}
-            />
-          ))}
+        <div className="flex items-center justify-center gap-3 mt-8">
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={() => paginate(-1)}
+            className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-colors"
+            aria-label="Previous"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </motion.button>
+
+          <div className="flex items-center gap-2">
+            {images.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCenterIndex(i)}
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  i === centerIndex
+                    ? "w-8 bg-indigo-500"
+                    : "w-1.5 bg-white/20 hover:bg-white/40"
+                }`}
+                aria-label={`Go to slide ${i + 1}`}
+              />
+            ))}
+          </div>
+
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={() => paginate(1)}
+            className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-colors"
+            aria-label="Next"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </motion.button>
         </div>
 
         <p className="text-center text-sm text-[#a8a7a2] mt-4 font-medium">
-          {images[currentIndex].alt}
+          {images[centerIndex].alt}
         </p>
       </div>
     </section>
