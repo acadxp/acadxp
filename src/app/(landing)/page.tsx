@@ -1,4 +1,5 @@
 import Hero from "@/components/landing/Hero";
+import ScreenshotCarousel from "@/components/landing/ScreenshotCarousel";
 import About from "@/components/landing/About";
 import ProductivityCockpit from "@/components/landing/ProductivityCockpit";
 import AICourseGeneration from "@/components/landing/AICourseGeneration";
@@ -10,6 +11,7 @@ export default function HomePage() {
   return (
     <main>
       <Hero />
+      <ScreenshotCarousel />
       <ProductivityCockpit />
       <AICourseGeneration />
       <SocialDynamics />
